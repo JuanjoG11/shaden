@@ -5,7 +5,7 @@
 const ShadenDB = (() => {
 
   /* ── Auth local (credenciales en sessionStorage, no en Supabase) ── */
-  const DEFAULT_AUTH = { username: 'admin', password: 'shaden2026' };
+  const DEFAULT_AUTH = { username: 'shadentiendadevariedades@gmail.com', password: 'Shaden17$' };
   const AUTH_KEY     = 'shaden_auth';
 
   function getAuth() {
