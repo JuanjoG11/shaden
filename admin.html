@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shaden — Panel Administrativo</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/splash.css" />
+</head>
+<body class="admin-body">
+
+  <!-- ══════════════ SPLASH SCREEN ══════════════ -->
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-bg">
+      <div class="splash-shape splash-shape-1"></div>
+      <div class="splash-shape splash-shape-2"></div>
+      <div class="splash-shape splash-shape-3"></div>
+    </div>
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <div class="splash-logo-text" id="splash-logo-text">
+          <span class="splash-name">Shaden</span>
+          <div class="splash-divider-wrap">
+            <span class="splash-line"></span>
+            <i class="fa-solid fa-diamond splash-diamond"></i>
+            <span class="splash-line"></span>
+          </div>
+          <span class="splash-tagline">Tienda de Variedades</span>
+        </div>
+      </div>
+      <div class="splash-loader">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ LOGIN SCREEN ══════════════ -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-bg">
+      <div class="login-shape login-shape-1"></div>
+      <div class="login-shape login-shape-2"></div>
+    </div>
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="brand-name" style="font-size:2.6rem;">Shaden</span>
+        <span class="brand-tagline">Panel Administrativo</span>
+      </div>
+      <div class="login-divider"><span>✦</span></div>
+      <form class="login-form" id="login-form" novalidate>
+        <div class="field-group">
+          <label for="login-user">Usuario</label>
+          <div class="field-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="login-user" placeholder="admin" autocomplete="username" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="login-pass">Contraseña</label>
+          <div class="field-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+            <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Ver contraseña">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <p class="login-error" id="login-error" hidden>Usuario o contraseña incorrectos.</p>
+        <button type="submit" class="btn btn-gold btn-login">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar
+        </button>
+      </form>
+      <a href="index.html" class="login-back">
+        <i class="fa-solid fa-arrow-left"></i> Volver al catálogo
+      </a>
+    </div>
+  </div>
+
+  <!-- ══════════════ ADMIN PANEL ══════════════ -->
+  <div class="admin-panel" id="admin-panel" hidden>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="sidebar-brand-name">Shaden</span>
+        <span class="sidebar-brand-tag">Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-view="dashboard">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </button>
+        <button class="sidebar-link" data-view="products">
+          <i class="fa-solid fa-box"></i> Productos
+        </button>
+        <button class="sidebar-link" data-view="categories">
+          <i class="fa-solid fa-tag"></i> Categorías
+        </button>
+        <button class="sidebar-link" data-view="settings">
+          <i class="fa-solid fa-gear"></i> Ajustes
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html" class="sidebar-link sidebar-external">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver catálogo
+        </a>
+        <button class="sidebar-link sidebar-logout" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Overlay sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main -->
+    <div class="admin-main">
+
+      <!-- Top bar -->
+      <header class="admin-topbar">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Menú">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h1 class="topbar-title" id="topbar-title">Dashboard</h1>
+        <div class="topbar-actions">
+          <span class="topbar-user">
+            <i class="fa-solid fa-circle-user"></i> Admin
+          </span>
+        </div>
+      </header>
+
+      <!-- ── VIEW: DASHBOARD ── -->
+      <section class="admin-view active" id="view-dashboard">
+        <div class="view-header">
+          <h2>Bienvenida de nuevo</h2>
+          <p>Resumen general de tu tienda</p>
+        </div>
+        <div class="stats-grid" id="stats-grid">
+          <!-- Generado por JS -->
+        </div>
+        <div class="dashboard-bottom">
+          <div class="recent-products-card">
+            <div class="card-head">
+              <h3>Últimos productos</h3>
+              <button class="btn-text" data-view="products">Ver todos</button>
+            </div>
+            <div id="recent-products-list"></div>
+          </div>
+          <div class="categories-summary-card">
+            <div class="card-head">
+              <h3>Por categoría</h3>
+            </div>
+            <div id="cat-summary-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── VIEW: PRODUCTS ── -->
+      <section class="admin-view" id="view-products">
+        <div class="view-header">
+          <div>
+            <h2>Productos</h2>
+            <p>Gestiona el catálogo de tu tienda</p>
+          </div>
+          <button class="btn btn-gold" id="add-product-btn">
+            <i class="fa-solid fa-plus"></i> Nuevo producto
+          </button>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="table-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="admin-search" placeholder="Buscar producto…" />
+          </div>
+          <select id="admin-filter-cat" class="sort-select">
+            <option value="all">Todas las categorías</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table class="admin-table" id="products-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody">
+              <!-- Generado por JS -->
+            </tbody>
+          </table>
+        </div>
+        <p class="table-count" id="table-count"></p>
+      </section>
+
+      <!-- ── VIEW: CATEGORIES ── -->
+      <section class="admin-view" id="view-categories">
+        <div class="view-header">
+          <div>
+            <h2>Categorías</h2>
+            <p>Organiza los productos de tu tienda</p>
+          </div>
+          <button class="btn btn-gold" id="add-cat-btn">
+            <i class="fa-solid fa-plus"></i> Nueva categoría
+          </button>
+        </div>
+        <div class="cat-admin-grid" id="cat-admin-grid">
+          <!-- Generado por JS -->
+        </div>
+      </section>
+
+      <!-- ── VIEW: SETTINGS ── -->
+      <section class="admin-view" id="view-settings">
+        <div class="view-header">
+          <h2>Ajustes de la tienda</h2>
+          <p>Configura la información pública de Shaden</p>
+        </div>
+        <div class="settings-form-card">
+          <form id="settings-form" novalidate>
+            <div class="settings-grid">
+              <div class="field-group">
+                <label for="s-storename">Nombre de la tienda</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-store"></i>
+                  <input type="text" id="s-storename" value="Shaden" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-tagline">Eslogan</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-quote-left"></i>
+                  <input type="text" id="s-tagline" value="Tienda de Variedades" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-phone">WhatsApp</label>
+                <div class="field-wrap">
+                  <i class="fa-brands fa-whatsapp"></i>
+                  <input type="text" id="s-phone" value="573042468500" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-address">Dirección</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-location-dot"></i>
+                  <input type="text" id="s-address" value="Cra 27 #72-03, Cuba, Pereira" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-instagram">Instagram</label>
+                <div class="field-wrap">
+                  <i class="fa-brands fa-instagram"></i>
+                  <input type="text" id="s-instagram" value="@shaden_variedades" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-discount">Descuento web (%)</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-percent"></i>
+                  <input type="number" id="s-discount" value="10" min="0" max="100" />
+                </div>
+              </div>
+            </div>
+            <div class="field-group" style="margin-top:8px;">
+              <label for="s-about">Descripción "Nosotros"</label>
+              <textarea id="s-about" rows="3">En Shaden encontrarás todo lo que necesitas: desde accesorios y regalos únicos hasta maquillaje y artículos de variedades seleccionados con amor.</textarea>
+            </div>
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-gold">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Change password -->
+        <div class="settings-form-card" style="margin-top:28px;">
+          <h3 style="margin-bottom:20px; font-size:1.1rem; color:var(--brown);">Cambiar contraseña</h3>
+          <form id="pass-form" novalidate>
+            <div class="settings-grid">
+              <div class="field-group">
+                <label for="s-pass-current">Contraseña actual</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-lock"></i>
+                  <input type="password" id="s-pass-current" placeholder="••••••••" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="s-pass-new">Nueva contraseña</label>
+                <div class="field-wrap">
+                  <i class="fa-solid fa-lock-open"></i>
+                  <input type="password" id="s-pass-new" placeholder="••••••••" />
+                </div>
+              </div>
+            </div>
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-outline">
+                <i class="fa-solid fa-key"></i> Cambiar contraseña
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </div><!-- end admin-main -->
+  </div><!-- end admin-panel -->
+
+  <!-- ══════════════ MODAL PRODUCTO ══════════════ -->
+  <div class="modal-overlay" id="product-form-modal" role="dialog" aria-modal="true" aria-labelledby="pf-modal-title">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 id="pf-modal-title">Nuevo producto</h3>
+        <button class="modal-close" id="pf-modal-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="product-form" novalidate>
+          <input type="hidden" id="pf-id" />
+          <div class="pf-grid">
+            <div class="field-group pf-full">
+              <label for="pf-name">Nombre del producto <span class="req">*</span></label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-box"></i>
+                <input type="text" id="pf-name" placeholder="Ej: Labial mate rosa" required />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="pf-category">Categoría <span class="req">*</span></label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-tag"></i>
+                <select id="pf-category" required></select>
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="pf-price">Precio (COP)</label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-dollar-sign"></i>
+                <input type="number" id="pf-price" placeholder="25000" min="0" />
+              </div>
+            </div>
+            <div class="field-group pf-full">
+              <label for="pf-desc">Descripción</label>
+              <textarea id="pf-desc" rows="3" placeholder="Describe el producto…"></textarea>
+            </div>
+            <div class="field-group pf-full">
+              <label for="pf-image">URL de imagen</label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-image"></i>
+                <input type="url" id="pf-image" placeholder="https://…" />
+              </div>
+              <div class="img-preview-wrap" id="img-preview-wrap">
+                <img id="img-preview" src="" alt="Vista previa" />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="pf-badge">Etiqueta especial</label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-certificate"></i>
+                <select id="pf-badge">
+                  <option value="">Sin etiqueta</option>
+                  <option value="new">Nuevo</option>
+                  <option value="offer">Oferta</option>
+                  <option value="featured">Destacado</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="pf-status">Estado</label>
+              <div class="field-wrap">
+                <i class="fa-solid fa-toggle-on"></i>
+                <select id="pf-status">
+                  <option value="active">Activo</option>
+                  <option value="inactive">Oculto</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="pf-actions">
+            <button type="button" class="btn btn-outline" id="pf-cancel">Cancelar</button>
+            <button type="submit" class="btn btn-gold" id="pf-submit">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MODAL CATEGORÍA ══════════════ -->
+  <div class="modal-overlay" id="cat-form-modal" role="dialog" aria-modal="true" aria-labelledby="cf-modal-title">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="cf-modal-title">Nueva categoría</h3>
+        <button class="modal-close" id="cf-modal-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="cat-form" novalidate>
+          <input type="hidden" id="cf-id" />
+          <div class="field-group" style="margin-bottom:18px;">
+            <label for="cf-name">Nombre <span class="req">*</span></label>
+            <div class="field-wrap">
+              <i class="fa-solid fa-tag"></i>
+              <input type="text" id="cf-name" placeholder="Ej: Maquillaje" required />
+            </div>
+          </div>
+          <div class="field-group" style="margin-bottom:24px;">
+            <label for="cf-icon">Ícono (Font Awesome class)</label>
+            <div class="field-wrap">
+              <i class="fa-solid fa-icons"></i>
+              <input type="text" id="cf-icon" placeholder="fa-solid fa-palette" />
+            </div>
+            <span class="field-hint">Ej: <code>fa-solid fa-palette</code></span>
+          </div>
+          <div class="pf-actions">
+            <button type="button" class="btn btn-outline" id="cf-cancel">Cancelar</button>
+            <button type="submit" class="btn btn-gold">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CONFIRM MODAL ══════════════ -->
+  <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>Confirmar acción</h3>
+        <button class="modal-close" id="confirm-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-msg" style="color:var(--text-muted); margin-bottom:24px;"></p>
+        <div class="pf-actions">
+          <button class="btn btn-outline" id="confirm-cancel">Cancelar</button>
+          <button class="btn" id="confirm-ok" style="background:var(--brown); color:var(--white);">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/splash.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

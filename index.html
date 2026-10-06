@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Shaden Tienda de Variedades — Todo lo que buscas, en un solo lugar. Variedades, regalos, accesorios, maquillaje y más." />
+  <title>Shaden — Tienda de Variedades</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/catalog.css" />
+  <link rel="stylesheet" href="css/splash.css" />
+</head>
+<body>
+
+  <!-- ══════════════ SPLASH SCREEN ══════════════ -->
+  <div class="splash" id="splash" aria-hidden="true">
+    <div class="splash-bg">
+      <div class="splash-shape splash-shape-1"></div>
+      <div class="splash-shape splash-shape-2"></div>
+      <div class="splash-shape splash-shape-3"></div>
+    </div>
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <!-- Logo CSS puro — sin imagen, sin fondo -->
+        <div class="splash-logo-text" id="splash-logo-text">
+          <span class="splash-name">Shaden</span>
+          <div class="splash-divider-wrap">
+            <span class="splash-line"></span>
+            <i class="fa-solid fa-diamond splash-diamond"></i>
+            <span class="splash-line"></span>
+          </div>
+          <span class="splash-tagline">Tienda de Variedades</span>
+        </div>
+      </div>
+      <div class="splash-loader">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar-inner">
+
+      <button class="hamburger" id="hamburger" aria-label="Menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <a href="index.html" class="brand">
+        <span class="brand-name">Shaden</span>
+        <span class="brand-tagline">Tienda de Variedades</span>
+      </a>
+
+      <nav class="nav-links" id="nav-links">
+        <a href="#catalogo" class="nav-link">Catálogo</a>
+        <a href="#categorias" class="nav-link">Categorías</a>
+        <a href="#nosotros" class="nav-link">Nosotros</a>
+        <a href="#contacto" class="nav-link">Contacto</a>
+        <a href="admin.html" class="nav-link nav-admin"><i class="fa-solid fa-lock"></i> Admin</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="nav-icon-btn" id="search-toggle" aria-label="Buscar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <a href="https://wa.me/573042468500" target="_blank" class="nav-icon-btn" aria-label="WhatsApp">
+          <i class="fa-brands fa-whatsapp"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div class="search-bar" id="search-bar">
+      <div class="container">
+        <div class="search-inner">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-input" placeholder="Buscar productos…" autocomplete="off" />
+          <button id="search-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Overlay mobile menu -->
+  <div class="nav-overlay" id="nav-overlay"></div>
+
+  <!-- ══════════════ HERO ══════════════ -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg">
+      <div class="hero-shape hero-shape-1"></div>
+      <div class="hero-shape hero-shape-2"></div>
+      <div class="hero-shape hero-shape-3"></div>
+    </div>
+    <div class="container hero-content">
+      <p class="hero-eyebrow">Bienvenida a</p>
+      <h1 class="hero-title">
+        <span>Shaden</span>
+      </h1>
+      <p class="hero-subtitle">Tienda de Variedades</p>
+      <div class="hero-divider">
+        <span class="line"></span>
+        <i class="fa-solid fa-diamond"></i>
+        <span class="line"></span>
+      </div>
+      <p class="hero-text">Todo lo que buscas,<br /><em>en un solo lugar.</em></p>
+      <div class="hero-ctas">
+        <a href="#catalogo" class="btn btn-gold">
+          <i class="fa-solid fa-star"></i> Ver catálogo
+        </a>
+        <a href="https://wa.me/573042468500" target="_blank" class="btn btn-outline">
+          <i class="fa-brands fa-whatsapp"></i> Escribenos
+        </a>
+      </div>
+      <div class="hero-categories">
+        <div class="hero-cat"><i class="fa-solid fa-shirt"></i><span>Variedades</span></div>
+        <div class="hero-cat"><i class="fa-solid fa-gift"></i><span>Regalos</span></div>
+        <div class="hero-cat"><i class="fa-solid fa-gem"></i><span>Accesorios</span></div>
+        <div class="hero-cat"><i class="fa-solid fa-palette"></i><span>Maquillaje</span></div>
+        <div class="hero-cat"><i class="fa-solid fa-heart"></i><span>Sex Shop</span></div>
+      </div>
+    </div>
+    <a href="#catalogo" class="hero-scroll" aria-label="Ir al catálogo">
+      <i class="fa-solid fa-chevron-down"></i>
+    </a>
+  </section>
+
+  <!-- ══════════════ BANNER INFO ══════════════ -->
+  <div class="info-banner">
+    <div class="container info-banner-inner">
+      <div class="info-item">
+        <i class="fa-solid fa-location-dot"></i>
+        <span>Cra 27 #72-03, Cuba</span>
+      </div>
+      <div class="info-sep">◆</div>
+      <div class="info-item">
+        <i class="fa-brands fa-whatsapp"></i>
+        <a href="https://wa.me/573042468500">304 246 8500</a>
+      </div>
+      <div class="info-sep">◆</div>
+      <div class="info-item">
+        <i class="fa-brands fa-instagram"></i>
+        <a href="https://instagram.com/shaden_variedades" target="_blank">@shaden_variedades</a>
+      </div>
+      <div class="info-sep">◆</div>
+      <div class="info-item">
+        <i class="fa-solid fa-tag"></i>
+        <span>10% de descuento presentando este sitio</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ CATEGORÍAS ══════════════ -->
+  <section class="section" id="categorias">
+    <div class="container">
+      <div class="section-header">
+        <p>Explora por</p>
+        <h2>Categorías</h2>
+        <div class="divider"><span class="divider-star">✦</span></div>
+      </div>
+      <div class="categories-grid" id="categories-grid">
+        <!-- Generado por JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ CATÁLOGO ══════════════ -->
+  <section class="section section-alt" id="catalogo">
+    <div class="container">
+      <div class="section-header">
+        <p>Nuestros</p>
+        <h2>Productos</h2>
+        <div class="divider"><span class="divider-star">✦</span></div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="catalog-toolbar">
+        <div class="filter-tabs" id="filter-tabs">
+          <button class="filter-tab active" data-cat="all">Todos</button>
+          <!-- Tabs generados por JS -->
+        </div>
+        <div class="catalog-sort">
+          <label for="sort-select" class="sr-only">Ordenar</label>
+          <select id="sort-select" class="sort-select">
+            <option value="default">Orden por defecto</option>
+            <option value="name-asc">Nombre A→Z</option>
+            <option value="name-desc">Nombre Z→A</option>
+            <option value="price-asc">Menor precio</option>
+            <option value="price-desc">Mayor precio</option>
+            <option value="new">Más nuevos</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid de productos -->
+      <div class="products-grid" id="products-grid">
+        <!-- Generado por JS -->
+      </div>
+
+      <!-- Estado vacío -->
+      <div class="empty-state" id="empty-state" hidden>
+        <i class="fa-solid fa-box-open"></i>
+        <h3>Sin resultados</h3>
+        <p>Intenta con otra categoría o término de búsqueda.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════ NOSOTROS ══════════════ -->
+  <section class="section" id="nosotros">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="about-blob">
+            <div class="about-icon-grid">
+              <div class="aig-item"><i class="fa-solid fa-shirt"></i></div>
+              <div class="aig-item"><i class="fa-solid fa-gift"></i></div>
+              <div class="aig-item"><i class="fa-solid fa-gem"></i></div>
+              <div class="aig-item"><i class="fa-solid fa-palette"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="about-text">
+          <p class="about-eyebrow">Quiénes somos</p>
+          <h2>Una tienda pensada<br /><em>para ti</em></h2>
+          <div class="divider" style="justify-content:flex-start; margin:16px 0 24px;">
+            <span class="divider-star">✦</span>
+          </div>
+          <p>En <strong>Shaden</strong> encontrarás todo lo que necesitas: desde accesorios y regalos únicos hasta maquillaje y artículos de variedades seleccionados con amor.</p>
+          <p style="margin-top:14px;">Nos ubicamos en el corazón de Cuba, Pereira, listos para sorprenderte con productos de calidad a precios justos.</p>
+          <div class="about-stats">
+            <div class="stat">
+              <span class="stat-num" data-target="5">0</span>
+              <span class="stat-label">Categorías</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-target="100">0</span><span class="stat-label" style="align-self:flex-end;margin-bottom:4px;">+</span>
+              <span class="stat-label">Productos</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-target="10">0</span><span class="stat-label" style="align-self:flex-end;margin-bottom:4px;">%</span>
+              <span class="stat-label">Descuento</span>
+            </div>
+          </div>
+          <a href="https://wa.me/573042468500" target="_blank" class="btn btn-gold" style="margin-top:32px;">
+            <i class="fa-brands fa-whatsapp"></i> Contáctanos
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ CONTACTO ══════════════ -->
+  <section class="section section-alt" id="contacto">
+    <div class="container">
+      <div class="section-header">
+        <p>Estamos aquí para ti</p>
+        <h2>Contáctanos</h2>
+        <div class="divider"><span class="divider-star">✦</span></div>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <h4>Dirección</h4>
+          <p>Cra 27 #72-03<br />Cuba, Pereira</p>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-brands fa-whatsapp"></i></div>
+          <h4>WhatsApp</h4>
+          <a href="https://wa.me/573042468500">304 246 8500</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-brands fa-instagram"></i></div>
+          <h4>Instagram</h4>
+          <a href="https://instagram.com/shaden_variedades" target="_blank">@shaden_variedades</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-brands fa-facebook"></i></div>
+          <h4>Facebook</h4>
+          <a href="#" target="_blank">Shaden Tienda de Variedades</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-name" style="font-size:2rem;">Shaden</span>
+        <span class="brand-tagline">Tienda de Variedades</span>
+        <p>Todo lo que buscas, en un solo lugar.</p>
+      </div>
+      <div class="footer-links">
+        <h5>Categorías</h5>
+        <ul id="footer-cats"></ul>
+      </div>
+      <div class="footer-social">
+        <h5>Síguenos</h5>
+        <div class="social-icons">
+          <a href="https://instagram.com/shaden_variedades" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://wa.me/573042468500" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+        <p class="footer-discount">
+          <i class="fa-solid fa-tag"></i>
+          Presenta este sitio y obtén<br /><strong>10% de descuento</strong>
+        </p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Shaden Tienda de Variedades · Cuba, Pereira</p>
+    </div>
+  </footer>
+
+  <!-- ══════════════ MODAL DETALLE PRODUCTO ══════════════ -->
+  <div class="modal-overlay" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-product-name">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-product-name">Producto</h3>
+        <button class="modal-close" id="modal-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="product-detail">
+          <div class="product-detail-img">
+            <img id="modal-img" src="" alt="" />
+            <span class="product-detail-badge" id="modal-badge"></span>
+          </div>
+          <div class="product-detail-info">
+            <span class="product-detail-cat" id="modal-cat"></span>
+            <p class="product-detail-price" id="modal-price"></p>
+            <p class="product-detail-desc" id="modal-desc"></p>
+            <a href="#" class="btn btn-gold btn-lg" id="modal-wa" target="_blank">
+              <i class="fa-brands fa-whatsapp"></i> Preguntar por WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/splash.js"></script>
+  <script src="js/catalog.js"></script>
+</body>
+</html>

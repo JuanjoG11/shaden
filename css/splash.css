@@ -1,0 +1,138 @@
+/* =============================================
+   SHADEN — Splash Screen
+   ============================================= */
+
+body.splash-active { overflow: hidden; }
+
+/* ── Contenedor ── */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Fondo idéntico al hero ── */
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #faf5f0 0%, #f5ede4 55%, #ede0d4 100%);
+  overflow: hidden;
+}
+.splash-shape { display: none; }
+
+/* ── Contenido ── */
+.splash-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 44px;
+}
+
+/* ── Wrapper animado ── */
+.splash-logo-wrap {
+  opacity: 0;
+  transform: translateY(-70px) scale(.82);
+}
+.splash-logo-wrap.drop-in {
+  animation: logoDropIn .95s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+@keyframes logoDropIn {
+  0%   { opacity: 0; transform: translateY(-80px) scale(.8);   }
+  60%  { opacity: 1; transform: translateY(10px)  scale(1.03); }
+  80%  { transform: translateY(-5px) scale(.99); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);     }
+}
+
+/* ── Logo CSS puro ── */
+.splash-logo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.splash-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(5.5rem, 20vw, 10rem);
+  font-weight: 500;
+  line-height: .9;
+  letter-spacing: .04em;
+  background: linear-gradient(
+    135deg,
+    #8c6030 0%,
+    #c49050 25%,
+    #d4a96a 45%,
+    #c8914a 65%,
+    #8c6030 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* Sutil sombra para darle la sensación metálica del logo real */
+  filter: drop-shadow(0 2px 8px rgba(140,96,48,.18));
+}
+.splash-divider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 200px;
+  margin: 2px 0 4px;
+}
+.splash-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c49050, transparent);
+}
+.splash-diamond {
+  color: #b5864a;
+  font-size: .55rem;
+}
+.splash-tagline {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(.7rem, 2.2vw, .9rem);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: #9a7e6a;
+}
+
+/* ── Loader ── */
+.splash-loader {
+  display: flex;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+.splash-loader span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #c49050;
+  animation: splashDot .9s ease-in-out infinite;
+}
+.splash-loader span:nth-child(2) { animation-delay: .18s; }
+.splash-loader span:nth-child(3) { animation-delay: .36s; }
+@keyframes splashDot {
+  0%, 80%, 100% { transform: scale(.55); opacity: .3; }
+  40%           { transform: scale(1);   opacity: 1;  }
+}
+
+/* ── Salida ── */
+.splash.fade-out {
+  animation: splashFadeOut .75s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes splashFadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+/* ── Entrada de la página ── */
+@keyframes pageReveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+body.page-ready .navbar     { animation: pageReveal .5s ease both; }
+body.page-ready .hero       { animation: pageReveal .5s ease .08s both; }
+body.page-ready .info-banner{ animation: pageReveal .5s ease .16s both; }

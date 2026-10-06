@@ -1,0 +1,247 @@
+/* =============================================
+   SHADEN - Tienda de Variedades
+   Estilos Globales
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+
+/* ── Variables ── */
+:root {
+  --cream:       #f5ede4;
+  --cream-light: #faf5f0;
+  --cream-dark:  #ede0d4;
+  --blush:       #e8c9b8;
+  --gold:        #b5864a;
+  --gold-light:  #d4a96a;
+  --gold-dark:   #8c6030;
+  --brown:       #5c3d2e;
+  --brown-light: #7a5540;
+  --text:        #3d2b1f;
+  --text-muted:  #8a7060;
+  --white:       #ffffff;
+  --shadow-sm:   0 2px 12px rgba(90, 50, 20, .08);
+  --shadow-md:   0 6px 30px rgba(90, 50, 20, .12);
+  --shadow-lg:   0 16px 60px rgba(90, 50, 20, .18);
+  --radius:      12px;
+  --radius-lg:   20px;
+  --trans:       all .3s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--cream-light);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+img { max-width: 100%; display: block; }
+a  { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+
+/* ── Typography ── */
+.font-serif { font-family: 'Cormorant Garamond', serif; }
+
+h1, h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 500; line-height: 1.2; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
+
+/* ── Utility ── */
+.container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+.section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.section-header h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--brown);
+  margin-bottom: 12px;
+}
+.section-header p {
+  font-size: .95rem;
+  color: var(--text-muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px auto 0;
+  width: 120px;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gold-light);
+}
+.divider-star {
+  color: var(--gold);
+  font-size: .7rem;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: .88rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: var(--trans);
+}
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  color: var(--white);
+  box-shadow: 0 4px 20px rgba(181,134,74,.35);
+}
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(181,134,74,.45);
+}
+.btn-outline {
+  border: 1.5px solid var(--gold);
+  color: var(--gold-dark);
+}
+.btn-outline:hover {
+  background: var(--gold);
+  color: var(--white);
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.badge-gold    { background: rgba(181,134,74,.15); color: var(--gold-dark); }
+.badge-blush   { background: rgba(232,201,184,.5);  color: var(--brown); }
+.badge-new     { background: var(--gold); color: var(--white); }
+
+/* ── Card base ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--trans);
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Toast ── */
+#toast-container {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toast {
+  background: var(--brown);
+  color: var(--white);
+  padding: 14px 22px;
+  border-radius: var(--radius);
+  font-size: .88rem;
+  box-shadow: var(--shadow-md);
+  animation: slideInToast .35s ease forwards;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toast.success { background: #4a7c59; }
+.toast.error   { background: #c0392b; }
+@keyframes slideInToast {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.toast.hide {
+  animation: slideOutToast .35s ease forwards;
+}
+@keyframes slideOutToast {
+  to { transform: translateX(120%); opacity: 0; }
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 35, 20, .55);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--trans);
+}
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(.95) translateY(10px);
+  transition: var(--trans);
+}
+.modal-overlay.active .modal {
+  transform: scale(1) translateY(0);
+}
+.modal-header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--cream-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-header h3 { font-size: 1.5rem; color: var(--brown); }
+.modal-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--trans);
+}
+.modal-close:hover { background: var(--cream-dark); color: var(--brown); }
+.modal-body { padding: 28px 32px 32px; }
+
+/* ── Responsive helpers ── */
+@media (max-width: 768px) {
+  .container { padding: 0 16px; }
+  #toast-container { bottom: 20px; right: 16px; left: 16px; }
+  .toast { width: 100%; }
+}
