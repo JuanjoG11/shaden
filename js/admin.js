@@ -1,12 +1,12 @@
-/* =============================================
-   SHADEN — Admin Panel JavaScript (Supabase async)
+﻿/* =============================================
+   SHADEN â€” Admin Panel JavaScript (Supabase async)
    ============================================= */
 
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 function formatPrice(price) {
-  if (!price && price !== 0) return '—';
+  if (!price && price !== 0) return 'â€”';
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(price);
 }
 
@@ -40,24 +40,24 @@ const AdminState = {
   settings:   {},
 };
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    AUTH
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const AuthUI = (() => {
   function init() {
     const loginScreen = $('#login-screen');
     const adminPanel  = $('#admin-panel');
 
     if (ShadenDB.Auth.isLoggedIn()) {
-      loginScreen.hidden = true;
-      adminPanel.hidden  = false;
+      loginScreen.style.display = "none";
+      adminPanel.style.display  = "flex";
       // init se llama desde DOMContentLoaded
       return;
     }
 
-    // Asegurarse que el panel esté oculto
-    loginScreen.hidden = false;
-    adminPanel.hidden  = true;
+    // Asegurarse que el panel estÃ© oculto
+    loginScreen.style.display = "flex";
+    adminPanel.style.display  = "none";
 
     $('#login-form').addEventListener('submit', async e => {
       e.preventDefault();
@@ -67,10 +67,10 @@ const AuthUI = (() => {
 
       if (ShadenDB.Auth.check(user, pass)) {
         ShadenDB.Auth.setSession();
-        loginScreen.hidden = true;
-        adminPanel.hidden  = false;
+        loginScreen.style.display = "none";
+        adminPanel.style.display  = "flex";
         await AdminPanel.init();
-        showToast('¡Bienvenida! 👋', 'success');
+        showToast('Â¡Bienvenida! ðŸ‘‹', 'success');
       } else {
         errEl.hidden = false;
         $('#login-pass').value = '';
@@ -93,12 +93,12 @@ const AuthUI = (() => {
   return { init };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ADMIN PANEL
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const AdminPanel = (() => {
 
-  const viewLabels = { dashboard:'Dashboard', products:'Productos', categories:'Categorías', settings:'Ajustes' };
+  const viewLabels = { dashboard:'Dashboard', products:'Productos', categories:'CategorÃ­as', settings:'Ajustes' };
 
   function navigate(view) {
     $$('.admin-view').forEach(v => v.classList.remove('active'));
@@ -164,9 +164,9 @@ const AdminPanel = (() => {
   return { init };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DASHBOARD
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const DashboardView = (() => {
 
   async function render() {
@@ -187,7 +187,7 @@ const DashboardView = (() => {
       </div>
       <div class="stat-card">
         <div class="stat-card-icon brown"><i class="fa-solid fa-tag"></i></div>
-        <div class="stat-card-info"><div class="stat-card-num">${cats.length}</div><div class="stat-card-label">Categorías</div></div>
+        <div class="stat-card-info"><div class="stat-card-num">${cats.length}</div><div class="stat-card-label">CategorÃ­as</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-card-icon blush"><i class="fa-solid fa-eye-slash"></i></div>
@@ -198,7 +198,7 @@ const DashboardView = (() => {
         <div class="stat-card-info"><div class="stat-card-num">${featured}</div><div class="stat-card-label">Destacados</div></div>
       </div>`;
 
-    // Últimos 5 productos
+    // Ãšltimos 5 productos
     const recent = [...products].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
     $('#recent-products-list').innerHTML = recent.length
       ? recent.map(p => {
@@ -206,13 +206,13 @@ const DashboardView = (() => {
           return `
             <div class="recent-product-row">
               <div class="rpr-img">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy"/>` : `<i class="${cat?.icon||'fa-solid fa-box'}"></i>`}</div>
-              <div class="rpr-info"><div class="rpr-name">${p.name}</div><div class="rpr-cat">${cat?.name||'—'}</div></div>
-              <div class="rpr-price">${p.price ? formatPrice(p.price) : '—'}</div>
+              <div class="rpr-info"><div class="rpr-name">${p.name}</div><div class="rpr-cat">${cat?.name||'â€”'}</div></div>
+              <div class="rpr-price">${p.price ? formatPrice(p.price) : 'â€”'}</div>
             </div>`;
         }).join('')
-      : '<p style="color:var(--text-muted);font-size:.85rem;padding:12px 0">Sin productos aún.</p>';
+      : '<p style="color:var(--text-muted);font-size:.85rem;padding:12px 0">Sin productos aÃºn.</p>';
 
-    // Resumen por categoría
+    // Resumen por categorÃ­a
     $('#cat-summary-list').innerHTML = cats.map(cat => {
       const count = products.filter(p => p.category === cat.id).length;
       return `
@@ -227,9 +227,9 @@ const DashboardView = (() => {
   return { render };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PRODUCTS VIEW
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const ProductsView = (() => {
 
   let filterCat   = 'all';
@@ -244,7 +244,7 @@ const ProductsView = (() => {
   async function populateCatFilter() {
     const cats = AdminState.categories;
     const sel  = $('#admin-filter-cat');
-    sel.innerHTML = `<option value="all">Todas las categorías</option>` +
+    sel.innerHTML = `<option value="all">Todas las categorÃ­as</option>` +
       cats.map(c => `<option value="${c.id}"${filterCat===c.id?' selected':''}>${c.name}</option>`).join('');
   }
 
@@ -280,8 +280,8 @@ const ProductsView = (() => {
               <div><div class="td-name">${p.name}</div>${getBadgeHTML(p.badge)}</div>
             </div>
           </td>
-          <td><span class="td-cat-badge">${cat?.name||'—'}</span></td>
-          <td class="td-price">${p.price?formatPrice(p.price):'—'}</td>
+          <td><span class="td-cat-badge">${cat?.name||'â€”'}</span></td>
+          <td class="td-price">${p.price?formatPrice(p.price):'â€”'}</td>
           <td><span class="status-pill ${p.status}">${p.status==='active'?'Activo':'Oculto'}</span></td>
           <td>
             <div class="td-actions">
@@ -308,7 +308,7 @@ const ProductsView = (() => {
     };
   }
 
-  /* ── Form ── */
+  /* â”€â”€ Form â”€â”€ */
   function initForm() {
     $('#add-product-btn').addEventListener('click', () => openProductForm(null));
     $('#pf-modal-close').addEventListener('click', closeProductForm);
@@ -372,11 +372,11 @@ const ProductsView = (() => {
     const cat  = $('#pf-category').value;
 
     if (!name) { showToast('El nombre es obligatorio.', 'error'); return; }
-    if (!cat)  { showToast('Selecciona una categoría.', 'error'); return; }
+    if (!cat)  { showToast('Selecciona una categorÃ­a.', 'error'); return; }
 
     const btn = $('#pf-submit');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardandoâ€¦';
 
     try {
       const data = {
@@ -389,8 +389,8 @@ const ProductsView = (() => {
         status:      $('#pf-status').value,
       };
 
-      if (id) { await ShadenDB.Products.update(id, data); showToast(`"${name}" actualizado. ✓`, 'success'); }
-      else    { await ShadenDB.Products.add(data);        showToast(`"${name}" agregado. ✓`, 'success'); }
+      if (id) { await ShadenDB.Products.update(id, data); showToast(`"${name}" actualizado. âœ“`, 'success'); }
+      else    { await ShadenDB.Products.add(data);        showToast(`"${name}" agregado. âœ“`, 'success'); }
 
       closeProductForm();
       await renderTable();
@@ -407,7 +407,7 @@ const ProductsView = (() => {
     ShadenDB.Products.getById(productId).then(p => {
       if (!p) return;
       ConfirmModal.show(
-        `¿Eliminar "<strong>${p.name}</strong>"? Esta acción no se puede deshacer.`,
+        `Â¿Eliminar "<strong>${p.name}</strong>"? Esta acciÃ³n no se puede deshacer.`,
         async () => {
           try {
             await ShadenDB.Products.delete(productId);
@@ -425,9 +425,9 @@ const ProductsView = (() => {
   return { render, initForm };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CATEGORIES VIEW
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const CategoriesView = (() => {
 
   async function render() {
@@ -471,12 +471,12 @@ const CategoriesView = (() => {
     if (catId) {
       const cat = await ShadenDB.Categories.getById(catId);
       if (!cat) return;
-      titleEl.textContent  = 'Editar categoría';
+      titleEl.textContent  = 'Editar categorÃ­a';
       $('#cf-id').value    = cat.id;
       $('#cf-name').value  = cat.name;
       $('#cf-icon').value  = cat.icon;
     } else {
-      titleEl.textContent = 'Nueva categoría';
+      titleEl.textContent = 'Nueva categorÃ­a';
       $('#cf-id').value   = '';
     }
 
@@ -498,8 +498,8 @@ const CategoriesView = (() => {
     if (!name) { showToast('El nombre es obligatorio.', 'error'); return; }
 
     try {
-      if (id) { await ShadenDB.Categories.update(id, { name, icon }); showToast(`"${name}" actualizada. ✓`, 'success'); }
-      else    { await ShadenDB.Categories.add({ name, icon });         showToast(`"${name}" creada. ✓`, 'success'); }
+      if (id) { await ShadenDB.Categories.update(id, { name, icon }); showToast(`"${name}" actualizada. âœ“`, 'success'); }
+      else    { await ShadenDB.Categories.add({ name, icon });         showToast(`"${name}" creada. âœ“`, 'success'); }
       closeCatForm();
       await render();
       await DashboardView.render();
@@ -513,8 +513,8 @@ const CategoriesView = (() => {
       if (!cat) return;
       const prods = (await ShadenDB.Products.getAll()).filter(p => p.category === catId);
       const msg   = prods.length
-        ? `¿Eliminar "<strong>${cat.name}</strong>"? Tiene ${prods.length} producto(s) asociados.`
-        : `¿Eliminar "<strong>${cat.name}</strong>"? Esta acción no se puede deshacer.`;
+        ? `Â¿Eliminar "<strong>${cat.name}</strong>"? Tiene ${prods.length} producto(s) asociados.`
+        : `Â¿Eliminar "<strong>${cat.name}</strong>"? Esta acciÃ³n no se puede deshacer.`;
 
       ConfirmModal.show(msg, async () => {
         try {
@@ -532,9 +532,9 @@ const CategoriesView = (() => {
   return { render, initForm };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SETTINGS VIEW
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const SettingsView = (() => {
 
   async function render() {
@@ -564,7 +564,7 @@ const SettingsView = (() => {
           discount:  parseInt($('#s-discount').value) || 0,
           about:     $('#s-about').value.trim(),
         });
-        showToast('Ajustes guardados. ✓', 'success');
+        showToast('Ajustes guardados. âœ“', 'success');
       } catch (err) {
         showToast('Error al guardar: ' + err.message, 'error');
       } finally {
@@ -576,20 +576,20 @@ const SettingsView = (() => {
       e.preventDefault();
       const current = $('#s-pass-current').value;
       const newPass = $('#s-pass-new').value;
-      if (current !== ShadenDB.Auth.get().password) { showToast('Contraseña actual incorrecta.', 'error'); return; }
-      if (newPass.length < 6) { showToast('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+      if (current !== ShadenDB.Auth.get().password) { showToast('ContraseÃ±a actual incorrecta.', 'error'); return; }
+      if (newPass.length < 6) { showToast('La contraseÃ±a debe tener al menos 6 caracteres.', 'error'); return; }
       ShadenDB.Auth.changePassword(newPass);
       $('#pass-form').reset();
-      showToast('Contraseña cambiada. ✓', 'success');
+      showToast('ContraseÃ±a cambiada. âœ“', 'success');
     });
   }
 
   return { render, init };
 })();
 
-/* ══════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CONFIRM MODAL
-══════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const ConfirmModal = (() => {
   let _cb = null;
 
@@ -618,17 +618,19 @@ const ConfirmModal = (() => {
   return { init, show };
 })();
 
-/* ── Init ── */
+/* â”€â”€ Init â”€â”€ */
+/* -- Init -- */
 document.addEventListener('DOMContentLoaded', async () => {
+  const loginScreen = document.getElementById('login-screen');
+  const adminPanel  = document.getElementById('admin-panel');
+
   if (ShadenDB.Auth.isLoggedIn()) {
-    // Ya tiene sesión — mostrar panel directamente
-    $('#login-screen').hidden = true;
-    $('#admin-panel').hidden  = false;
+    loginScreen.style.display = 'none';
+    adminPanel.style.display  = 'flex';
     await AdminPanel.init();
   } else {
-    // Sin sesión — mostrar login
-    $('#login-screen').hidden = false;
-    $('#admin-panel').hidden  = true;
+    loginScreen.style.display = '';
+    adminPanel.style.display  = 'none';
     AuthUI.init();
   }
 });
