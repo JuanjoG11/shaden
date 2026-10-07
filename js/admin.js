@@ -51,8 +51,13 @@ const AuthUI = (() => {
     if (ShadenDB.Auth.isLoggedIn()) {
       loginScreen.hidden = true;
       adminPanel.hidden  = false;
+      // init se llama desde DOMContentLoaded
       return;
     }
+
+    // Asegurarse que el panel esté oculto
+    loginScreen.hidden = false;
+    adminPanel.hidden  = true;
 
     $('#login-form').addEventListener('submit', async e => {
       e.preventDefault();
@@ -80,7 +85,9 @@ const AuthUI = (() => {
       icon.className = inp.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
     });
 
-    $('#login-user').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#login-pass').focus(); } });
+    $('#login-user').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); $('#login-pass').focus(); }
+    });
   }
 
   return { init };
@@ -613,8 +620,15 @@ const ConfirmModal = (() => {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', async () => {
-  AuthUI.init();
   if (ShadenDB.Auth.isLoggedIn()) {
+    // Ya tiene sesión — mostrar panel directamente
+    $('#login-screen').hidden = true;
+    $('#admin-panel').hidden  = false;
     await AdminPanel.init();
+  } else {
+    // Sin sesión — mostrar login
+    $('#login-screen').hidden = false;
+    $('#admin-panel').hidden  = true;
+    AuthUI.init();
   }
 });

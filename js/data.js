@@ -8,10 +8,8 @@ const ShadenDB = (() => {
   const DEFAULT_AUTH = { username: 'shadentiendadevariedades@gmail.com', password: 'Shaden17$' };
   const AUTH_KEY     = 'shaden_auth';
 
-  // Siempre sincronizar localStorage con las credenciales actuales
+  // Sincronizar credenciales en localStorage
   localStorage.setItem(AUTH_KEY, JSON.stringify(DEFAULT_AUTH));
-  // Limpiar sesión vieja si existía
-  sessionStorage.removeItem('shaden_logged');
 
   function getAuth() {
     return DEFAULT_AUTH;
