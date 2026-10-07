@@ -8,9 +8,13 @@ const ShadenDB = (() => {
   const DEFAULT_AUTH = { username: 'shadentiendadevariedades@gmail.com', password: 'Shaden17$' };
   const AUTH_KEY     = 'shaden_auth';
 
+  // Siempre sincronizar localStorage con las credenciales actuales
+  localStorage.setItem(AUTH_KEY, JSON.stringify(DEFAULT_AUTH));
+  // Limpiar sesión vieja si existía
+  sessionStorage.removeItem('shaden_logged');
+
   function getAuth() {
-    try { return JSON.parse(localStorage.getItem(AUTH_KEY)) || DEFAULT_AUTH; }
-    catch { return DEFAULT_AUTH; }
+    return DEFAULT_AUTH;
   }
   function saveAuth(data) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(data));
@@ -237,7 +241,7 @@ const ShadenDB = (() => {
   ══════════════════════════════ */
   const Auth = {
     get()                    { return getAuth(); },
-    check(username, password){ const a = getAuth(); return a.username === username && a.password === password; },
+    check(username, password){ return DEFAULT_AUTH.username === username && getAuth().password === password; },
     changePassword(newPass)  { saveAuth({ ...getAuth(), password: newPass }); },
     setSession()             { sessionStorage.setItem('shaden_logged', '1'); },
     clearSession()           { sessionStorage.removeItem('shaden_logged'); },
