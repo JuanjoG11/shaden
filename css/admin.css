@@ -684,24 +684,116 @@
 .img-preview-wrap img { width: 100%; object-fit: cover; max-height: 160px; }
 
 /* ── Responsive ── */
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+
 @media (max-width: 1024px) {
-  .dashboard-bottom { grid-template-columns: 1fr; }
-  .settings-grid { grid-template-columns: 1fr; }
+  .dashboard-bottom        { grid-template-columns: 1fr; }
+  .settings-grid           { grid-template-columns: 1fr; }
+  .stats-grid              { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  /* Sidebar deslizable */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+    z-index: 900;
+  }
   .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.active { display: block; }
+
+  /* Main sin margen */
   .admin-main { margin-left: 0; }
-  .topbar-toggle { display: flex; }
-  .admin-view { padding: 24px 16px 48px; }
-  .admin-topbar { padding: 0 16px; }
-  .pf-grid { grid-template-columns: 1fr; }
+
+  /* Topbar */
+  .topbar-toggle  { display: flex; }
+  .admin-topbar   { padding: 0 16px; gap: 10px; }
+  .topbar-title   { font-size: 1.1rem; }
+  .topbar-user span { display: none; }
+
+  /* Vistas */
+  .admin-view     { padding: 20px 14px 60px; }
+
+  /* View header */
+  .view-header    { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .view-header h2 { font-size: 1.4rem; }
+  .view-header .btn { width: 100%; justify-content: center; }
+
+  /* Stats */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card  { padding: 16px; gap: 12px; }
+  .stat-card-icon { width: 42px; height: 42px; font-size: 1rem; border-radius: 10px; }
+  .stat-card-num  { font-size: 1.6rem; }
+
+  /* Dashboard bottom */
+  .dashboard-bottom { grid-template-columns: 1fr; gap: 16px; }
+  .recent-products-card,
+  .categories-summary-card { padding: 18px 16px; }
+
+  /* Tabla */
+  .table-toolbar  { flex-direction: column; }
+  .table-search   { width: 100%; }
+  .table-wrap     { border-radius: var(--radius); }
+  .admin-table    { font-size: .78rem; }
+  .admin-table thead th { padding: 10px 12px; font-size: .65rem; }
+  .admin-table td { padding: 10px 12px; }
+
+  /* Ocultar columnas no esenciales en móvil */
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3),
+  .admin-table th:nth-child(4),
+  .admin-table td:nth-child(4) { display: none; }
+
+  .td-thumb { width: 36px; height: 36px; }
+  .td-name  { font-size: .82rem; }
+
+  /* Form producto */
+  .pf-grid { grid-template-columns: 1fr; gap: 14px; }
   .pf-full { grid-column: auto; }
-  .settings-form-card { padding: 24px 20px; }
+  .pf-actions { flex-direction: column-reverse; gap: 10px; }
+  .pf-actions .btn { width: 100%; justify-content: center; }
+
+  /* Categorías */
+  .cat-admin-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .cat-admin-card { padding: 18px 12px; }
+
+  /* Settings */
+  .settings-form-card { padding: 20px 16px; }
+  .settings-grid      { grid-template-columns: 1fr; gap: 14px; }
+  .settings-actions   { justify-content: stretch; }
+  .settings-actions .btn { width: 100%; justify-content: center; }
+
+  /* Modal */
+  .modal { max-width: 100% !important; margin: 0 10px; }
+  .modal-header { padding: 20px 20px 16px; }
+  .modal-body   { padding: 20px; }
+
+  /* Login */
+  .login-card { padding: 36px 24px; margin: 16px; }
 }
 
 @media (max-width: 480px) {
-  .login-card { padding: 36px 24px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  /* Stats una sola columna */
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-card-num { font-size: 1.4rem; }
+
+  /* Categorías una sola columna */
+  .cat-admin-grid { grid-template-columns: 1fr; }
+
+  /* Ocultar también precio en tabla */
+  .admin-table th:nth-child(2),
+  .admin-table td:nth-child(2) { display: none; }
+
+  /* Login */
+  .login-card { padding: 28px 18px; }
+  .login-logo .brand-name { font-size: 2rem !important; }
+
+  /* Topbar */
+  .admin-topbar { height: 56px; }
+  .topbar-title { font-size: 1rem; }
+
+  /* Table scroll horizontal más visible */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
 }
