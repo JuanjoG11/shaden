@@ -323,6 +323,10 @@ const ProductsView = (() => {
       else      { wrap.classList.remove('show'); }
     }, 500));
 
+    // Generador EAN-13
+    $('#pf-gen-barcode').addEventListener('click', () => {
+      $('#pf-barcode').value = generateEAN13();
+    });
     $('#product-form').addEventListener('submit', async e => { e.preventDefault(); await saveProduct(); });
   }
 
@@ -344,6 +348,7 @@ const ProductsView = (() => {
       $('#pf-image').value    = p.image || '';
       $('#pf-badge').value    = p.badge || '';
       $('#pf-status').value   = p.status || 'active';
+      $('#pf-barcode').value  = p.barcode || '';
       if (p.image) { const wrap=$('#img-preview-wrap'); const img=$('#img-preview'); img.src=p.image; img.onload=()=>wrap.classList.add('show'); }
     } else {
       titleEl.textContent = 'Nuevo producto';
@@ -387,6 +392,7 @@ const ProductsView = (() => {
         image:       $('#pf-image').value.trim(),
         badge:       $('#pf-badge').value,
         status:      $('#pf-status').value,
+        barcode:     $('#pf-barcode').value.trim(),
       };
 
       if (id) { await ShadenDB.Products.update(id, data); showToast(`"${name}" actualizado. âœ“`, 'success'); }

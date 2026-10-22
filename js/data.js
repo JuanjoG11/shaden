@@ -139,6 +139,7 @@ const ShadenDB = (() => {
           image:       product.image || '',
           badge:       product.badge || '',
           status:      product.status || 'active',
+          barcode:     product.barcode || '',
         })
         .select()
         .single();
@@ -157,6 +158,7 @@ const ShadenDB = (() => {
           image:       product.image || '',
           badge:       product.badge || '',
           status:      product.status || 'active',
+          barcode:     product.barcode || '',
         })
         .eq('id', id);
       check(error, 'Products.update');
@@ -170,13 +172,24 @@ const ShadenDB = (() => {
       check(error, 'Products.delete');
     },
 
+    async getByBarcode(barcode) {
+      const { data, error } = await db
+        .from('products')
+        .select('*')
+        .eq('barcode', barcode.trim())
+        .eq('status', 'active')
+        .single();
+      if (error) return null;
+      return data;
+    },
+
     async search(query) {
       const q = query.toLowerCase().trim();
       const { data, error } = await db
         .from('products')
         .select('*')
         .eq('status', 'active')
-        .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+        .or(`name.ilike.%${q}%,description.ilike.%${q}%,barcode.ilike.%${q}%`)
         .order('created_at', { ascending: false });
       check(error, 'Products.search');
       return data || [];

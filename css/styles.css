@@ -245,3 +245,75 @@ h1, h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 500; line-he
   #toast-container { bottom: 20px; right: 16px; left: 16px; }
   .toast { width: 100%; }
 }
+
+/* ════════════════════════════════════════════
+   STOCK BADGES — Disponibilidad en catálogo
+════════════════════════════════════════════ */
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.stock-agotado {
+  background: rgba(192, 57, 43, .12);
+  color: #c0392b;
+  border: 1px solid rgba(192, 57, 43, .25);
+}
+.stock-poco {
+  background: rgba(192, 112, 48, .12);
+  color: #c07030;
+  border: 1px solid rgba(192, 112, 48, .25);
+}
+.stock-ok {
+  background: rgba(39, 160, 106, .1);
+  color: #27a06a;
+  border: 1px solid rgba(39, 160, 106, .2);
+}
+
+/* ── Tarjeta agotada ── */
+.product-card.product-agotado {
+  cursor: default;
+  opacity: .75;
+}
+.product-card.product-agotado .product-img-wrap {
+  position: relative;
+}
+.product-agotado-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(245, 237, 228, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  backdrop-filter: grayscale(.3);
+}
+.product-agotado-overlay span {
+  background: rgba(92, 61, 46, .82);
+  color: var(--cream-light);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 50px;
+}
+.product-card.product-agotado:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Botón WhatsApp deshabilitado ── */
+.product-wa-btn.wa-agotado {
+  background: var(--cream-dark);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  pointer-events: none;
+}

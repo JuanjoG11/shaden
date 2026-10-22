@@ -110,6 +110,9 @@
         </button>
       </nav>
       <div class="sidebar-footer">
+        <a href="pos/index.html" class="sidebar-link sidebar-external" style="color:#c9a84c;font-weight:600">
+          <i class="fa-solid fa-cash-register"></i> Sistema POS
+        </a>
         <a href="index.html" class="sidebar-link sidebar-external">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver catálogo
         </a>
@@ -193,6 +196,7 @@
                 <th>Producto</th>
                 <th>Categoría</th>
                 <th>Precio</th>
+                <th><i class="fa-solid fa-barcode" style="margin-right:5px"></i>Código</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -384,6 +388,21 @@
                   <option value="inactive">Oculto</option>
                 </select>
               </div>
+            </div>
+            <!-- ── CÓDIGO DE BARRAS ── -->
+            <div class="field-group pf-full">
+              <label for="pf-barcode">Código de barras</label>
+              <div class="field-wrap" style="display:flex;gap:8px;align-items:stretch">
+                <i class="fa-solid fa-barcode"></i>
+                <input type="text" id="pf-barcode" placeholder="Escanea o ingresa el código — ej. 7790001234567" style="flex:1" />
+                <button type="button" id="pf-gen-barcode" title="Generar EAN-13 automático"
+                  style="flex-shrink:0;padding:0 14px;background:linear-gradient(135deg,#d4a96a,#b5864a);color:#fff;border:none;border-radius:0 8px 8px 0;cursor:pointer;font-size:.78rem;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:6px;transition:opacity .2s">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Auto
+                </button>
+              </div>
+              <p style="font-size:.72rem;color:var(--text-muted);margin-top:4px">
+                <i class="fa-solid fa-circle-info"></i> Con un lector USB/BT escanea el producto aquí para asignarle su código original, o genera uno automático.
+              </p>
             </div>
           </div>
           <div class="pf-actions">

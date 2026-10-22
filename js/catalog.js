@@ -40,7 +40,64 @@ const State = {
   searchQuery: '',
   categories:  [],
   settings:    {},
+  stock:       {},   // map productId → qty
 };
+
+/* ── Actualizar UI de stock sin re-renderizar todo ── */
+function _refreshProductStockUI(productId, newQty) {
+  const card = document.querySelector(`.product-card[data-id="${productId}"]`);
+  if (!card) return; // tarjeta no visible actualmente
+
+  const isAgotado = newQty <= 0;
+  const isLow     = newQty > 0 && newQty <= 5;
+
+  // Toggle clase agotado
+  card.classList.toggle('product-agotado', isAgotado);
+  card.setAttribute('tabindex', isAgotado ? '-1' : '0');
+  card.setAttribute('aria-label',
+    card.getAttribute('aria-label')?.replace(/ — Agotado$/, '') + (isAgotado ? ' — Agotado' : '')
+  );
+
+  // Overlay agotado
+  let overlay = card.querySelector('.product-agotado-overlay');
+  if (isAgotado && !overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'product-agotado-overlay';
+    overlay.innerHTML = '<span>Agotado</span>';
+    card.querySelector('.product-img-wrap')?.appendChild(overlay);
+  } else if (!isAgotado && overlay) {
+    overlay.remove();
+  }
+
+  // Stock badge
+  const badgesEl = card.querySelector('.product-badges');
+  if (badgesEl) {
+    // Eliminar badge de stock anterior
+    badgesEl.querySelectorAll('.stock-badge').forEach(b => b.remove());
+    // Agregar el nuevo
+    if (isAgotado) {
+      badgesEl.insertAdjacentHTML('beforeend',
+        `<span class="stock-badge stock-agotado"><i class="fa-solid fa-circle-xmark"></i> Agotado</span>`);
+    } else if (isLow) {
+      badgesEl.insertAdjacentHTML('beforeend',
+        `<span class="stock-badge stock-poco"><i class="fa-solid fa-circle-exclamation"></i> Últimas unidades</span>`);
+    }
+  }
+
+  // Botón WhatsApp
+  const footer = card.querySelector('.product-footer');
+  if (footer) {
+    const waOld = footer.querySelector('.product-wa-btn');
+    if (waOld) {
+      if (isAgotado) {
+        waOld.outerHTML = `<span class="product-wa-btn wa-agotado" aria-disabled="true"><i class="fa-solid fa-circle-xmark"></i></span>`;
+      } else if (waOld.classList.contains('wa-agotado')) {
+        // Recuperar el stock — restaurar botón WA
+        renderProducts(); // re-render completo para recuperar el href correcto
+      }
+    }
+  }
+}
 
 /* ── Navbar scroll ── */
 function initNavbar() {
@@ -222,14 +279,25 @@ async function renderProducts() {
     const waMsg  = encodeURIComponent(`Hola Shaden! Me interesa: *${p.name}*${price ? ` (${price})` : ''}. ¿Está disponible?`);
     const waLink = `https://wa.me/${settings.phone || '573042468500'}?text=${waMsg}`;
     const delay  = (i % 8) * 50;
+
+    // Stock: null = sin control de inventario (siempre disponible), 0 = agotado, >0 = disponible
+    const stockQty  = State.stock.hasOwnProperty(p.id) ? State.stock[p.id] : null;
+    const isAgotado = stockQty !== null && stockQty <= 0;
+    const stockBadge = isAgotado
+      ? `<span class="stock-badge stock-agotado"><i class="fa-solid fa-circle-xmark"></i> Agotado</span>`
+      : stockQty !== null && stockQty <= 5
+        ? `<span class="stock-badge stock-poco"><i class="fa-solid fa-circle-exclamation"></i> Últimas unidades</span>`
+        : '';
+
     return `
-      <article class="product-card" data-id="${p.id}" style="animation-delay:${delay}ms" tabindex="0" role="button" aria-label="Ver ${p.name}">
+      <article class="product-card${isAgotado ? ' product-agotado' : ''}" data-id="${p.id}" style="animation-delay:${delay}ms" tabindex="${isAgotado ? -1 : 0}" role="button" aria-label="Ver ${p.name}${isAgotado ? ' — Agotado' : ''}">
         <div class="product-img-wrap">
           ${p.image
             ? `<img src="${p.image}" alt="${p.name}" loading="lazy" />`
             : `<div class="product-no-img"><i class="${cat?.icon || 'fa-solid fa-box'}"></i></div>`
           }
-          <div class="product-badges">${getBadgeHTML(p.badge)}</div>
+          <div class="product-badges">${getBadgeHTML(p.badge)}${stockBadge}</div>
+          ${isAgotado ? '<div class="product-agotado-overlay"><span>Agotado</span></div>' : ''}
         </div>
         <div class="product-info">
           <p class="product-cat-tag">${cat?.name || ''}</p>
@@ -240,17 +308,24 @@ async function renderProducts() {
               ? `<span class="product-price">${price}</span>`
               : `<span class="product-price no-price">Consultar precio</span>`
             }
-            <a href="${waLink}" target="_blank" class="product-wa-btn" aria-label="Preguntar por WhatsApp" onclick="event.stopPropagation()">
-              <i class="fa-brands fa-whatsapp"></i>
-            </a>
+            ${isAgotado
+              ? `<span class="product-wa-btn wa-agotado" aria-disabled="true" title="Sin stock"><i class="fa-solid fa-circle-xmark"></i></span>`
+              : `<a href="${waLink}" target="_blank" class="product-wa-btn" aria-label="Preguntar por WhatsApp" onclick="event.stopPropagation()"><i class="fa-brands fa-whatsapp"></i></a>`
+            }
           </div>
         </div>
       </article>`;
   }).join('');
 
   $$('.product-card').forEach(card => {
-    card.addEventListener('click',   () => openProductModal(card.dataset.id));
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openProductModal(card.dataset.id); });
+    card.addEventListener('click',   () => {
+      if (card.classList.contains('product-agotado')) return;
+      openProductModal(card.dataset.id);
+    });
+    card.addEventListener('keydown', e => {
+      if (card.classList.contains('product-agotado')) return;
+      if (e.key === 'Enter' || e.key === ' ') openProductModal(card.dataset.id);
+    });
   });
 }
 
@@ -263,11 +338,42 @@ async function openProductModal(productId) {
   const price    = formatPrice(p.price);
   const waMsg    = encodeURIComponent(`Hola Shaden! Me interesa: *${p.name}*${price ? ` (${price})` : ''}. ¿Está disponible?`);
 
+  const stockQty  = State.stock.hasOwnProperty(p.id) ? State.stock[p.id] : null;
+  const isAgotado = stockQty !== null && stockQty <= 0;
+  const isLow     = stockQty !== null && stockQty > 0 && stockQty <= 5;
+
   $('#modal-product-name').textContent = p.name;
   $('#modal-cat').textContent   = cat?.name || '';
   $('#modal-price').textContent = price || 'Consultar precio';
   $('#modal-desc').textContent  = p.description || '';
-  $('#modal-wa').href = `https://wa.me/${settings.phone || '573042468500'}?text=${waMsg}`;
+
+  // Badge de stock en modal
+  const modalStock = document.getElementById('modal-stock');
+  if (modalStock) {
+    if (isAgotado) {
+      modalStock.innerHTML = '<span class="stock-badge stock-agotado"><i class="fa-solid fa-circle-xmark"></i> Agotado</span>';
+    } else if (isLow) {
+      modalStock.innerHTML = '<span class="stock-badge stock-poco"><i class="fa-solid fa-circle-exclamation"></i> ¡Últimas unidades!</span>';
+    } else if (stockQty !== null) {
+      modalStock.innerHTML = '<span class="stock-badge stock-ok"><i class="fa-solid fa-circle-check"></i> Disponible</span>';
+    } else {
+      modalStock.innerHTML = '';
+    }
+  }
+
+  // Botón WhatsApp
+  const waBtn = $('#modal-wa');
+  if (isAgotado) {
+    waBtn.href = '#';
+    waBtn.style.opacity = '.4';
+    waBtn.style.pointerEvents = 'none';
+    waBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Sin stock';
+  } else {
+    waBtn.href = `https://wa.me/${settings.phone || '573042468500'}?text=${waMsg}`;
+    waBtn.style.opacity = '';
+    waBtn.style.pointerEvents = '';
+    waBtn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Preguntar por WhatsApp';
+  }
 
   const imgEl = $('#modal-img');
   if (p.image) { imgEl.src = p.image; imgEl.alt = p.name; imgEl.style.display = 'block'; }
@@ -358,12 +464,28 @@ function initParallax() {
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Carga paralela de datos iniciales
-    const [cats, settings] = await Promise.all([
+    const [cats, settings, stockRows] = await Promise.all([
       ShadenDB.Categories.getAll(),
       ShadenDB.Settings.get(),
+      db.from('stock').select('product_id, qty').then(r => r.data || []),
     ]);
     State.categories = cats;
     State.settings   = settings;
+    // Mapa rápido de stock
+    State.stock = {};
+    stockRows.forEach(s => { State.stock[s.product_id] = s.qty; });
+
+    // Escuchar cambios de stock en tiempo real (Supabase Realtime)
+    db.channel('stock-web')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stock' }, payload => {
+        const { new: row } = payload;
+        if (row && row.product_id) {
+          State.stock[row.product_id] = row.qty;
+          // Re-renderizar silenciosamente las tarjetas afectadas
+          _refreshProductStockUI(row.product_id, row.qty);
+        }
+      })
+      .subscribe();
 
     initNavbar();
     initSearch();
