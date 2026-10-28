@@ -292,12 +292,26 @@
                 <button class="btn btn-ghost btn-icon" onclick="State.cart=[];renderCart()" title="Vaciar carrito">
                   <i class="fa-solid fa-trash"></i>
                 </button>
+                <button class="btn btn-outline btn-icon" onclick="holdCurrentCart()" title="Pausar venta actual (F8)">
+                  <i class="fa-solid fa-pause"></i>
+                </button>
+                <button class="btn btn-outline btn-icon" id="btn-held-carts" onclick="openHeldCartsModal()" title="Ventas en espera" style="position:relative">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <span class="nav-badge" id="held-carts-badge" style="display:none;top:-6px;right:-6px">0</span>
+                </button>
                 <button class="btn btn-outline" onclick="openLayawayFromCart()" title="Guardar como apartado" style="padding:10px 14px">
                   <i class="fa-solid fa-hand-holding-dollar"></i>
                 </button>
-                <button class="btn-cobrar" onclick="openPaymentModal()">
-                  <i class="fa-solid fa-cash-register"></i> Cobrar
+                <button class="btn-cobrar" onclick="openPaymentModal()" title="Cobrar (F2)">
+                  <i class="fa-solid fa-cash-register"></i> Cobrar <span class="shortcut-tag">F2</span>
                 </button>
+              </div>
+              <!-- Atajos de teclado rápidos -->
+              <div class="pos-shortcuts-bar">
+                <span onclick="openPaymentModal()" title="Cobrar venta"><kbd>F2</kbd> Cobrar</span>
+                <span onclick="document.getElementById('pos-search')?.focus()" title="Buscar producto o escanear"><kbd>F4</kbd> Buscar</span>
+                <span onclick="holdCurrentCart()" title="Pausar venta"><kbd>F8</kbd> Pausar</span>
+                <span><kbd>ESC</kbd> Salir</span>
               </div>
             </div>
           </div>
@@ -1245,10 +1259,22 @@
 
       <!-- Monto recibido (efectivo / tarjeta / transferencia) -->
       <div id="pay-single-section">
-        <div class="form-group" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:8px">
           <label>Monto recibido</label>
           <input type="number" class="form-ctrl" id="pay-amount-input" placeholder="0" min="0"
-            style="font-size:1.2rem;font-weight:700" oninput="updateChange()" />
+            style="font-size:1.35rem;font-weight:700;letter-spacing:.02em" oninput="updateChange()" />
+        </div>
+
+        <!-- Botones de billetes rápidos (Efectivo rápido) -->
+        <div class="quick-cash-container" id="quick-cash-row">
+          <button type="button" class="btn-cash-quick exact" onclick="setExactPayAmount()">
+            <i class="fa-solid fa-check"></i> Exacto
+          </button>
+          <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(10000)">$10.000</button>
+          <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(20000)">$20.000</button>
+          <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(50000)">$50.000</button>
+          <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(100000)">$100.000</button>
+          <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(200000)">$200.000</button>
         </div>
       </div>
 
@@ -1271,10 +1297,10 @@
         </div>
       </div>
 
-      <!-- Cambio -->
-      <div class="change-display" id="pay-change-row" style="display:none">
-        <span>Cambio a entregar</span>
-        <span id="pay-change">$0</span>
+      <!-- Cambio visual y destacado -->
+      <div class="change-display-card" id="pay-change-row">
+        <div class="cdc-label" id="pay-change-label">Cambio a entregar:</div>
+        <div class="cdc-amount" id="pay-change">$0</div>
       </div>
 
       <!-- Nota de venta -->
@@ -1286,10 +1312,76 @@
       </div>
     </div>
     <div class="modal-ftr">
-      <button class="btn btn-outline" id="btn-cancel-payment2" onclick="closeModal('payment-modal')">Cancelar</button>
-      <button class="btn btn-green" id="btn-complete-sale" style="min-width:160px">
-        <i class="fa-solid fa-check"></i> Confirmar venta
+      <button class="btn btn-outline" id="btn-cancel-payment2" onclick="closeModal('payment-modal')">Cancelar [ESC]</button>
+      <button class="btn btn-green" id="btn-complete-sale" style="min-width:180px">
+        <i class="fa-solid fa-check"></i> Confirmar venta [Enter]
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: VENTA EXITOSA (WHATSAPP + TIRILLA) ══════════════ -->
+<div class="modal-bg" id="sale-success-modal">
+  <div class="modal-box" style="max-width:440px;text-align:center">
+    <div class="sale-success-icon">
+      <i class="fa-solid fa-circle-check"></i>
+    </div>
+    <h3 style="font-size:1.35rem;font-weight:700;margin-bottom:4px;color:var(--text)">¡Venta Registrada!</h3>
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:16px" id="ss-invoice-info">Factura FAC-00000</p>
+
+    <!-- Resumen de pago de la venta -->
+    <div class="ss-summary-card">
+      <div class="ss-row">
+        <span>Total Venta:</span>
+        <b id="ss-total">$0</b>
+      </div>
+      <div class="ss-row" id="ss-change-row" style="display:none">
+        <span>Cambio entregado:</span>
+        <b class="text-green" id="ss-change">$0</b>
+      </div>
+      <div class="ss-row">
+        <span>Cliente:</span>
+        <span id="ss-customer">Cliente general</span>
+      </div>
+    </div>
+
+    <!-- Acciones inmediatas -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+      <button class="btn btn-whatsapp" onclick="openWhatsAppReceipt(window._lastCompletedSaleId)">
+        <i class="fa-brands fa-whatsapp" style="font-size:1.15rem"></i> Enviar Recibo por WhatsApp
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="flex:1" onclick="printInvoice(window._lastCompletedSaleId, true)">
+          <i class="fa-solid fa-receipt"></i> Tirilla 58/80mm
+        </button>
+        <button class="btn btn-outline" style="flex:1" onclick="printInvoice(window._lastCompletedSaleId, false)">
+          <i class="fa-solid fa-file-invoice"></i> Factura A4
+        </button>
+      </div>
+      <button class="btn btn-gold" onclick="closeModal('sale-success-modal'); document.getElementById('pos-search')?.focus();" style="margin-top:4px">
+        <i class="fa-solid fa-arrow-rotate-right"></i> Nueva Venta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL: VENTAS EN ESPERA (HOLD CARTS) ══════════════ -->
+<div class="modal-bg" id="held-carts-modal">
+  <div class="modal-box modal-lg">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold);margin-right:8px"></i>Ventas en Espera</h3>
+      <button class="icon-btn" onclick="closeModal('held-carts-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;color:var(--text2);margin-bottom:14px">
+        Ventas pausadas temporalmente en este mostrador. Puedes reanudar cualquiera con un solo clic.
+      </p>
+      <div id="held-carts-list" class="held-carts-container">
+        <!-- Render dinámico -->
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="closeModal('held-carts-modal')">Cerrar</button>
     </div>
   </div>
 </div>

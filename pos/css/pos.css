@@ -1894,3 +1894,266 @@ textarea.form-ctrl { resize: vertical; min-height: 80px; }
   border-radius: var(--radius-sm);
   font-size: .8rem;
 }
+
+/* ════════════════════════════════════════════
+   CÓDIGO DE BARRAS EN TARJETA DE PRODUCTO
+════════════════════════════════════════════ */
+.ppc-barcode {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: .68rem;
+  color: var(--text3);
+  letter-spacing: .04em;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ppc-barcode i {
+  font-size: .64rem;
+  color: var(--gold);
+}
+
+/* ════════════════════════════════════════════
+   BILLETES RÁPIDOS (QUICK CASH)
+════════════════════════════════════════════ */
+.quick-cash-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+  margin-top: 6px;
+}
+.btn-cash-quick {
+  background: var(--cream-light);
+  border: 1.5px solid var(--cream-dark);
+  color: var(--text);
+  padding: 9px 6px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.btn-cash-quick:hover {
+  background: var(--white);
+  border-color: var(--gold);
+  color: var(--gold-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,.04);
+}
+.btn-cash-quick:active {
+  transform: scale(.97);
+}
+.btn-cash-quick.exact {
+  background: rgba(39, 160, 106, 0.1);
+  border-color: rgba(39, 160, 106, 0.35);
+  color: var(--green);
+}
+.btn-cash-quick.exact:hover {
+  background: rgba(39, 160, 106, 0.18);
+  border-color: var(--green);
+}
+
+/* ════════════════════════════════════════════
+   CAMBIO / DEVUELTA DESTACADA
+════════════════════════════════════════════ */
+.change-display-card {
+  background: linear-gradient(135deg, rgba(39,160,106,.08), rgba(39,160,106,.03));
+  border: 2px solid rgba(39,160,106,.3);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  transition: all .2s ease;
+}
+.change-display-card .cdc-label {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text2);
+}
+.change-display-card .cdc-amount {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: -.02em;
+}
+.change-display-card.insufficient {
+  background: linear-gradient(135deg, rgba(192,57,43,.08), rgba(192,57,43,.03));
+  border-color: rgba(192,57,43,.3);
+}
+.change-display-card.insufficient .cdc-label {
+  color: var(--red);
+}
+.change-display-card.insufficient .cdc-amount {
+  color: var(--red);
+}
+
+/* ════════════════════════════════════════════
+   BARRA DE ATAJOS DE TECLADO
+════════════════════════════════════════════ */
+.pos-shortcuts-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--cream-light);
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  font-size: .72rem;
+  color: var(--text3);
+}
+.pos-shortcuts-bar span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: color .15s ease;
+}
+.pos-shortcuts-bar span:hover {
+  color: var(--brown);
+}
+.pos-shortcuts-bar kbd, .shortcut-tag {
+  background: var(--white);
+  border: 1px solid var(--cream-dark);
+  border-bottom: 2px solid #ccc;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--text2);
+}
+.shortcut-tag {
+  margin-left: 6px;
+  background: rgba(255,255,255,.25);
+  border-color: rgba(255,255,255,.4);
+  color: #fff;
+}
+
+/* ════════════════════════════════════════════
+   MODAL DE ÉXITO DE VENTA Y WHATSAPP
+════════════════════════════════════════════ */
+.sale-success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  background: rgba(39,160,106,.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  font-size: 2.2rem;
+  animation: popIn .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ss-summary-card {
+  background: var(--cream-light);
+  border: 1px solid var(--cream-mid);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.ss-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: .85rem;
+  color: var(--text2);
+}
+.ss-row b {
+  color: var(--text);
+  font-size: .95rem;
+}
+
+.btn-whatsapp {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  color: #fff !important;
+  border: none;
+  font-weight: 700;
+  font-size: .95rem;
+  padding: 12px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all .2s ease;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+}
+.btn-whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+}
+.btn-whatsapp:active {
+  transform: translateY(0);
+}
+
+/* ════════════════════════════════════════════
+   VENTAS EN ESPERA (HOLD CARTS)
+════════════════════════════════════════════ */
+.held-carts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.held-cart-card {
+  background: var(--cream-light);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: all .2s ease;
+}
+.held-cart-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(0,0,0,.03);
+}
+.hcc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.hcc-total {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--gold-dark);
+}
+.hcc-items {
+  font-size: .78rem;
+  color: var(--text2);
+  line-height: 1.4;
+  margin-bottom: 12px;
+  background: var(--white);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--cream-mid);
+}
+.hcc-items span {
+  display: inline-block;
+  margin-right: 8px;
+}
+.hcc-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+

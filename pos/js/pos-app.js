@@ -15,6 +15,11 @@ const State = {
   globalDisc:  0,
   taxPct:      0,
   saleNote:    '',
+  saleInProgress: false,
+  heldCarts:   (() => {
+    try { return JSON.parse(localStorage.getItem('shaden_held_carts') || '[]'); }
+    catch(e) { return []; }
+  })(),
 };
 
 /* ─────────────────────────────────────────────
@@ -27,6 +32,10 @@ async function initApp() {
   document.querySelectorAll('.nav-item[data-page]').forEach(el => {
     el.addEventListener('click', () => navigate(el.dataset.page));
   });
+  // Atajos de teclado del mostrador
+  initKeyboardShortcuts();
+  renderHeldCartsBadge();
+
   // Carga inicial en paralelo
   try {
     const [prods, cats, stockData] = await Promise.all([
@@ -276,16 +285,22 @@ function renderPOSProducts(query = '') {
   let prods = State.products;
   if (posFilter !== 'all') prods = prods.filter(p => p.category === posFilter);
   if (query) {
-    const q = query.toLowerCase();
-    prods = prods.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q));
+    const q = query.toLowerCase().trim();
+    prods = prods.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.description || '').toLowerCase().includes(q) ||
+      (p.barcode && String(p.barcode).toLowerCase().includes(q)) ||
+      (p.id && String(p.id).toLowerCase().includes(q))
+    );
   }
-  if (!prods.length) { el.innerHTML = '<p class="empty-msg" style="grid-column:1/-1">Sin productos</p>'; return; }
+  if (!prods.length) { el.innerHTML = '<p class="empty-msg" style="grid-column:1/-1">Sin productos encontrados</p>'; return; }
   el.innerHTML = prods.map(p => {
     const qty = State.stock[p.id] ?? 0;
     return `
     <div class="pos-product-card ${qty === 0 ? 'no-stock' : ''}" data-id="${p.id}" title="${p.name}">
       ${productImg(p.image, p.name)}
       <div class="ppc-name">${p.name}</div>
+      ${p.barcode ? `<div class="ppc-barcode"><i class="fa-solid fa-barcode"></i> ${p.barcode}</div>` : ''}
       <div class="ppc-price">${p.price ? fmt(p.price) : '<span style="color:var(--text3);font-size:.78rem">Sin precio</span>'}</div>
       <div class="ppc-stock">${qty === 0 ? '<span style="color:var(--red);font-size:.7rem">Sin stock</span>' : `Stock: ${qty}`}</div>
       <div class="ppc-add-btn"><i class="fa-solid fa-plus"></i></div>
@@ -300,7 +315,54 @@ function bindPOSSearch() {
   const inp = document.getElementById('pos-search');
   if (!inp || inp.dataset.init) return;
   inp.dataset.init = '1';
+
+  // Filtrado reactivo al escribir
   inp.addEventListener('input', debounce(() => renderPOSProducts(inp.value)));
+
+  // Escaneo directo o Enter en el buscador
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = inp.value.trim();
+      if (!val) return;
+
+      // 1. Buscar coincidencia exacta por barcode o id
+      const exact = State.products.find(p =>
+        (p.barcode && String(p.barcode).trim() === val) ||
+        String(p.id).trim() === val
+      );
+
+      if (exact) {
+        addToCart(exact.id);
+        if (typeof BarcodeScanner !== 'undefined' && BarcodeScanner.playBeep) BarcodeScanner.playBeep('success');
+        inp.value = '';
+        renderPOSProducts('');
+        return;
+      }
+
+      // 2. Si no es exacto, pero tras filtrar queda exactamente 1 producto visible
+      let currentFiltered = State.products;
+      if (posFilter !== 'all') currentFiltered = currentFiltered.filter(p => p.category === posFilter);
+      const q = val.toLowerCase();
+      currentFiltered = currentFiltered.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q) ||
+        (p.barcode && String(p.barcode).toLowerCase().includes(q))
+      );
+
+      if (currentFiltered.length === 1) {
+        addToCart(currentFiltered[0].id);
+        if (typeof BarcodeScanner !== 'undefined' && BarcodeScanner.playBeep) BarcodeScanner.playBeep('success');
+        inp.value = '';
+        renderPOSProducts('');
+        return;
+      }
+
+      // Si no encontró nada
+      if (typeof BarcodeScanner !== 'undefined' && BarcodeScanner.playBeep) BarcodeScanner.playBeep('error');
+      Toast.info(`No se encontró producto exacto para "${val}"`);
+    }
+  });
 }
 
 /* ── CART ── */
@@ -420,31 +482,119 @@ function renderCart() {
   }
 }
 
-/* ── PAGO ── */
+/* ── PAGO RÁPIDO Y DENOMINACIONES AUTOMATIZADAS ── */
+function setQuickPayAmount(amount) {
+  const inp = document.getElementById('pay-amount-input');
+  if (!inp) return;
+  inp.value = amount;
+  updateChange();
+  setTimeout(() => { inp.focus(); inp.select(); }, 50);
+}
+
+function setExactPayAmount() {
+  const { total } = cartTotals();
+  setQuickPayAmount(total);
+}
+
+function renderQuickCashButtons(total) {
+  const container = document.getElementById('quick-cash-row');
+  if (!container) return;
+  if (!total || total <= 0) { container.innerHTML = ''; return; }
+
+  // Calcular sugerencias inteligentes que cubran el valor
+  const denominations = [10000, 20000, 50000, 100000, 200000];
+  const suggestions = new Set();
+
+  // Próximo múltiplo de 10k y 50k
+  const next10k = Math.ceil(total / 10000) * 10000;
+  if (next10k > total) suggestions.add(next10k);
+
+  const next50k = Math.ceil(total / 50000) * 50000;
+  if (next50k > total) suggestions.add(next50k);
+
+  // Billetes mayores o iguales a la venta
+  denominations.filter(d => d >= total).forEach(d => suggestions.add(d));
+
+  // Si no hay suficientes sugerencias mayores, agregar denominaciones estándar
+  if (suggestions.size < 3) {
+    denominations.slice(-3).forEach(d => suggestions.add(d));
+  }
+
+  const sorted = Array.from(suggestions).sort((a, b) => a - b).slice(0, 5);
+
+  container.innerHTML = `
+    <button type="button" class="btn-cash-quick exact" onclick="setExactPayAmount()" title="Pago exacto">
+      <i class="fa-solid fa-check"></i> Exacto (${fmt(total)})
+    </button>
+    ${sorted.map(amt => `
+      <button type="button" class="btn-cash-quick" onclick="setQuickPayAmount(${amt})">
+        ${fmt(amt)}
+      </button>
+    `).join('')}
+  `;
+}
+
 function openPaymentModal() {
   if (!State.cart.length) { Toast.error('El carrito está vacío'); return; }
   const { total } = cartTotals();
   document.getElementById('pay-total-display').textContent = fmt(total);
-  document.getElementById('pay-amount-input').value = '';
-  document.getElementById('pay-change').textContent = fmt(0);
+
+  // AUTOMATIZADO: Por defecto el dinero recibido es EXACTAMENTE el valor de la venta
+  // Cero trabajo extra si pagan justo, con tarjeta o transferencia
+  const inp = document.getElementById('pay-amount-input');
+  if (inp) {
+    inp.value = total;
+    setTimeout(() => { inp.focus(); inp.select(); }, 120);
+  }
+
+  // Generar sugerencias de billetes adaptadas a este monto
+  renderQuickCashButtons(total);
+
   // Nota de venta
   const noteEl = document.getElementById('pay-sale-note');
   if (noteEl) noteEl.value = State.saleNote || '';
+
   // Pago mixto
   const mixCash = document.getElementById('pay-mix-cash');
   const mixCard = document.getElementById('pay-mix-card');
   const mixXfer = document.getElementById('pay-mix-xfer');
   if (mixCash) { mixCash.value = ''; mixCard.value = ''; mixXfer.value = ''; }
+
   selectPayMethod('cash');
   openModal('payment-modal');
+
+  // Enter dentro del input de pago confirma la venta
+  if (inp && !inp.dataset.enterBound) {
+    inp.dataset.enterBound = '1';
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        completeSale();
+      }
+    });
+  }
 }
 
 function selectPayMethod(method) {
   document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.toggle('active', b.dataset.method === method));
   window._payMethod = method;
-  // Mostrar/ocultar sección pago mixto
+  const { total } = cartTotals();
+
+  // Si es tarjeta o transferencia, siempre es el valor exacto del total
+  const inp = document.getElementById('pay-amount-input');
+  if (inp && (method === 'card' || method === 'transfer')) {
+    inp.value = total;
+  }
+
+  // Mostrar/ocultar sección pago mixto y botones de efectivo rápido
   const mixSection = document.getElementById('pay-mixed-section');
+  const singleSection = document.getElementById('pay-single-section');
+  const quickCashRow = document.getElementById('quick-cash-row');
+
   if (mixSection) mixSection.style.display = method === 'mixed' ? 'block' : 'none';
+  if (singleSection) singleSection.style.display = method === 'mixed' ? 'none' : 'block';
+  if (quickCashRow) quickCashRow.style.display = method === 'cash' ? 'grid' : 'none';
+
   updateChange();
 }
 
@@ -459,15 +609,36 @@ function updateChange() {
   } else {
     paid = +document.getElementById('pay-amount-input')?.value || 0;
   }
-  const change = paid - total;
-  const el = document.getElementById('pay-change');
-  if (el) el.textContent = change >= 0 ? fmt(change) : '—';
-  const el2 = document.getElementById('pay-change-row');
-  if (el2) el2.style.display = change > 0 ? 'flex' : 'none';
+  const diff = paid - total;
+  const changeEl = document.getElementById('pay-change');
+  const changeCard = document.getElementById('pay-change-row');
+  const labelEl = document.getElementById('pay-change-label');
+
+  if (!changeEl || !changeCard) return;
+
+  if (diff >= 0) {
+    changeCard.classList.remove('insufficient');
+    if (labelEl) labelEl.textContent = 'Cambio a entregar:';
+    changeEl.textContent = fmt(diff);
+  } else {
+    changeCard.classList.add('insufficient');
+    if (labelEl) labelEl.textContent = 'Monto faltante:';
+    changeEl.textContent = fmt(Math.abs(diff));
+  }
 }
 
 async function completeSale() {
   if (!State.cart.length) return;
+  if (State.saleInProgress) return;
+  State.saleInProgress = true;
+
+  const btn = document.getElementById('btn-complete-sale');
+  const resetBtn = () => {
+    State.saleInProgress = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar venta [Enter]'; }
+  };
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando…'; }
+
   const { subtotal, discAmt, taxAmt, total } = cartTotals();
   const method = window._payMethod || 'cash';
   const noteEl = document.getElementById('pay-sale-note');
@@ -480,12 +651,12 @@ async function completeSale() {
     cardAmt = +document.getElementById('pay-mix-card')?.value || 0;
     xferAmt = +document.getElementById('pay-mix-xfer')?.value || 0;
     paid = cashAmt + cardAmt + xferAmt;
-    if (paid < total) { Toast.error('El total de los métodos no cubre el valor'); return; }
+    if (paid < total) { Toast.error('El total de los métodos no cubre el valor'); resetBtn(); return; }
     change = Math.max(0, cashAmt - (total - cardAmt - xferAmt));
   } else {
     paid = +document.getElementById('pay-amount-input')?.value || total;
     change = Math.max(0, paid - total);
-    if (method === 'cash' && paid < total) { Toast.error('Monto insuficiente'); return; }
+    if (method === 'cash' && paid < total) { Toast.error('Monto insuficiente para completar la venta'); resetBtn(); return; }
     cashAmt = method === 'cash' ? paid : 0;
     cardAmt = method === 'card' ? total : 0;
     xferAmt = method === 'transfer' ? total : 0;
@@ -520,19 +691,267 @@ async function completeSale() {
     if (State.customer?.id) {
       PosDB.Customers.updateStats(State.customer.id, total).catch(() => {});
     }
+
     closeModal('payment-modal');
-    Toast.success(`Venta completada — ${fmt(total)}`);
+    if (typeof BarcodeScanner !== 'undefined' && BarcodeScanner.playBeep) BarcodeScanner.playBeep('success');
+
+    // Guardar para acciones post-venta
+    window._lastCompletedSaleId = sale.id;
+
+    // Abrir modal de éxito con WhatsApp y Tirilla
+    openSaleSuccessModal(sale, total, change, salePayload.customer_name);
+
     State.cart = []; State.customer = null; State.saleNote = '';
-    // Limpiar descuento mayorista
     State.globalDisc = 0;
     const gdEl = document.getElementById('global-disc-input');
     if (gdEl) gdEl.value = 0;
     renderCart();
     renderPOSProducts();
-    // Alerta de stock bajo post-venta
     _checkStockAlertAfterSale(itemsPayload);
-    setTimeout(() => printInvoice(sale.id, false), 500);
-  } catch(e) { Toast.error('Error al guardar la venta: ' + e.message); }
+
+  } catch(e) {
+    console.error(e);
+    Toast.error('Error al guardar la venta: ' + e.message);
+  } finally {
+    resetBtn();
+  }
+}
+
+/* ── MODAL POST-VENTA (WHATSAPP + TIRILLA) ── */
+function openSaleSuccessModal(sale, total, change, customerName) {
+  const modal = document.getElementById('sale-success-modal');
+  if (!modal) return;
+  const cfg = window._posSettings || {};
+  const prefix = cfg.invoice_prefix || 'FAC';
+
+  const infoEl = document.getElementById('ss-invoice-info');
+  if (infoEl) infoEl.textContent = `Factura ${prefix}-${String(sale.invoice_num).padStart(5, '0')}`;
+
+  const totalEl = document.getElementById('ss-total');
+  if (totalEl) totalEl.textContent = fmt(total);
+
+  const changeRow = document.getElementById('ss-change-row');
+  const changeEl = document.getElementById('ss-change');
+  if (changeRow && changeEl) {
+    changeRow.style.display = change > 0 ? 'flex' : 'none';
+    changeEl.textContent = fmt(change);
+  }
+
+  const custEl = document.getElementById('ss-customer');
+  if (custEl) custEl.textContent = customerName || 'Cliente general';
+
+  openModal('sale-success-modal');
+}
+
+/* ── COMPROBANTE WHATSAPP ── */
+function openWhatsAppReceipt(saleId) {
+  if (!saleId) return;
+  PosDB.Sales.getById(saleId).then(async sale => {
+    if (!sale) return;
+    const cfg = window._posSettings || await PosDB.PosSettings.get();
+    const itemsText = (sale.sale_items || []).map(it =>
+      `• ${it.quantity}x ${it.product_name}: ${fmt(it.line_total)}`
+    ).join('\n');
+
+    const msg =
+`✨ *${cfg.store_name || 'Shaden'}* ✨
+🧾 *Comprobante de Compra* #${cfg.invoice_prefix || 'FAC'}-${String(sale.invoice_num).padStart(5, '0')}
+📅 Fecha: ${fmtDateTime(sale.created_at)}
+👤 Cliente: ${sale.customer_name || 'Cliente general'}
+───────────────────
+${itemsText}
+───────────────────
+${sale.discount_amt > 0 ? `🏷️ Descuento: -${fmt(sale.discount_amt)}\n` : ''}💰 *TOTAL: ${fmt(sale.total)}*
+💳 Pago: ${payMethodLabel(sale.payment_method)}
+${sale.change_given > 0 ? `💵 Cambio: ${fmt(sale.change_given)}\n` : ''}
+📍 ${cfg.store_address || 'Cra 27 #72-03, Cuba, Pereira'}
+📱 ${cfg.store_phone || '573042468500'}
+🙏 *¡Muchas gracias por tu compra!*`;
+
+    let phone = '';
+    if (sale.customers && sale.customers.phone) {
+      phone = String(sale.customers.phone).replace(/\D/g, '');
+    }
+    if (!phone) {
+      const inputPhone = prompt('Ingresa el número de WhatsApp del cliente (10 dígitos):', '');
+      if (!inputPhone) return;
+      phone = inputPhone.replace(/\D/g, '');
+    }
+    if (phone.length === 10) phone = '57' + phone;
+
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  }).catch(err => {
+    console.error(err);
+    Toast.error('Error al generar comprobante de WhatsApp');
+  });
+}
+
+/* ── VENTAS EN ESPERA (HOLD CARTS) ── */
+function holdCurrentCart() {
+  if (!State.cart.length) {
+    Toast.info('El carrito está vacío, nada que pausar');
+    return;
+  }
+  const id = 'hold_' + Date.now();
+  const held = {
+    id,
+    date: new Date().toISOString(),
+    customer: State.customer,
+    cart: [...State.cart],
+    globalDisc: State.globalDisc,
+    saleNote: State.saleNote,
+    total: cartTotals().total
+  };
+  State.heldCarts.push(held);
+  localStorage.setItem('shaden_held_carts', JSON.stringify(State.heldCarts));
+
+  // Limpiar carrito actual para atender de inmediato al siguiente
+  State.cart = [];
+  State.customer = null;
+  State.globalDisc = 0;
+  State.saleNote = '';
+  const gdEl = document.getElementById('global-disc-input');
+  if (gdEl) gdEl.value = 0;
+
+  renderCart();
+  renderPOSProducts();
+  renderHeldCartsBadge();
+  Toast.success('Venta guardada en espera');
+}
+
+function openHeldCartsModal() {
+  renderHeldCartsList();
+  openModal('held-carts-modal');
+}
+
+function renderHeldCartsBadge() {
+  const badge = document.getElementById('held-carts-badge');
+  const count = State.heldCarts ? State.heldCarts.length : 0;
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+function renderHeldCartsList() {
+  const container = document.getElementById('held-carts-list');
+  if (!container) return;
+  if (!State.heldCarts || !State.heldCarts.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;color:var(--text3)">
+        <i class="fa-solid fa-clock-rotate-left" style="font-size:2.4rem;margin-bottom:12px;display:block"></i>
+        <p>No hay ventas en espera actualmente.</p>
+        <span style="font-size:.78rem">Puedes pausar un carrito con productos usando el botón de pausa o presionando <b>F8</b>.</span>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = State.heldCarts.map((h, idx) => {
+    const itemCount = (h.cart || []).reduce((sum, item) => sum + (item.quantity || 1), 0);
+    return `
+      <div class="held-cart-card">
+        <div class="hcc-header">
+          <div>
+            <b>${h.customer?.name || 'Cliente general'}</b>
+            <div style="font-size:.75rem;color:var(--text3)"><i class="fa-regular fa-clock"></i> ${fmtDateTime(h.date)}</div>
+          </div>
+          <div class="hcc-total">${fmt(h.total)}</div>
+        </div>
+        <div class="hcc-items">
+          ${(h.cart || []).map(i => `<span>${i.quantity}x ${i.product_name}</span>`).join(', ')}
+        </div>
+        <div class="hcc-actions">
+          <button class="btn btn-sm btn-ghost text-red" onclick="deleteHeldCart('${h.id}')" title="Descartar esta venta">
+            <i class="fa-solid fa-trash"></i> Descartar
+          </button>
+          <button class="btn btn-sm btn-green" onclick="restoreHeldCart('${h.id}')" title="Reanudar en el mostrador">
+            <i class="fa-solid fa-play"></i> Reanudar venta (${itemCount} prod)
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function restoreHeldCart(id) {
+  const idx = State.heldCarts.findIndex(h => h.id === id);
+  if (idx === -1) return;
+
+  if (State.cart.length > 0) {
+    const ok = confirm('Ya tienes productos en el carrito actual. ¿Deseas pausar el carrito actual para reanudar esta venta?');
+    if (!ok) return;
+    holdCurrentCart();
+  }
+
+  const item = State.heldCarts.splice(idx, 1)[0];
+  localStorage.setItem('shaden_held_carts', JSON.stringify(State.heldCarts));
+
+  State.cart = item.cart || [];
+  State.customer = item.customer || null;
+  State.globalDisc = item.globalDisc || 0;
+  State.saleNote = item.saleNote || '';
+
+  const gdEl = document.getElementById('global-disc-input');
+  if (gdEl) gdEl.value = State.globalDisc;
+
+  closeModal('held-carts-modal');
+  renderCart();
+  renderPOSProducts();
+  renderHeldCartsBadge();
+  Toast.success('Venta reanudada');
+}
+
+function deleteHeldCart(id) {
+  State.heldCarts = State.heldCarts.filter(h => h.id !== id);
+  localStorage.setItem('shaden_held_carts', JSON.stringify(State.heldCarts));
+  renderHeldCartsList();
+  renderHeldCartsBadge();
+  Toast.info('Venta en espera descartada');
+}
+
+/* ── ATAJOS DE TECLADO GLOBALES ── */
+function initKeyboardShortcuts() {
+  window.addEventListener('keydown', e => {
+    // F2: Cobrar
+    if (e.key === 'F2') {
+      e.preventDefault();
+      const posPage = document.getElementById('page-pos');
+      if (posPage?.classList.contains('active')) {
+        openPaymentModal();
+      }
+      return;
+    }
+
+    // F4: Foco directo en buscador de productos / código
+    if (e.key === 'F4') {
+      e.preventDefault();
+      const inp = document.getElementById('pos-search');
+      if (inp) {
+        inp.focus();
+        inp.select();
+      }
+      return;
+    }
+
+    // F8: Pausar venta o ver lista de pausadas
+    if (e.key === 'F8') {
+      e.preventDefault();
+      if (State.cart.length > 0) {
+        holdCurrentCart();
+      } else if (State.heldCarts && State.heldCarts.length > 0) {
+        openHeldCartsModal();
+      }
+      return;
+    }
+
+    // Escape: Cerrar cualquier modal abierto
+    if (e.key === 'Escape') {
+      const openModals = document.querySelectorAll('.modal-bg.open');
+      if (openModals.length > 0) {
+        openModals.forEach(m => m.classList.remove('open'));
+      }
+    }
+  });
 }
 
 function _checkStockAlertAfterSale(items) {
@@ -625,6 +1044,7 @@ async function renderSales(filter = 'today') {
       <td>${statusChip(s.status)}</td>
       <td>
         <div class="td-actions">
+          <button class="btn btn-sm btn-outline" style="color:var(--green);border-color:rgba(39,160,106,.3)" onclick="openWhatsAppReceipt('${s.id}')" title="Enviar recibo por WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
           <button class="btn btn-sm btn-outline" onclick="printInvoice('${s.id}', false)" title="Imprimir factura"><i class="fa-solid fa-print"></i></button>
           <button class="btn btn-sm btn-ghost" onclick="printInvoice('${s.id}', true)" title="Recibo térmico"><i class="fa-solid fa-receipt"></i></button>
           ${s.status === 'completed' ? `<button class="btn btn-sm btn-outline" onclick="openRefundModal('${s.id}')" title="Devolución"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
