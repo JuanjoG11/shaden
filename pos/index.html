@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shaden POS — Sistema Interno</title>
 
+  <!-- PWA & Desktop Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#14110d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Shaden POS" />
+  <meta name="application-name" content="Shaden POS" />
+  <meta name="msapplication-TileColor" content="#b5864a" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -110,6 +121,23 @@
         </div>
       </div>
       <div class="pos-header__right">
+        <!-- PWA: Botón de instalación en PC -->
+        <button class="pwa-install-btn pulse" id="pwa-install-btn" title="Instalar Shaden POS como App de Escritorio">
+          <i class="fa-solid fa-download"></i>
+          <span>Instalar en PC</span>
+        </button>
+
+        <!-- PWA: Indicador de conexión en vivo -->
+        <div class="pwa-net-status online" id="pwa-net-status" title="Conectado a la base de datos">
+          <span class="net-dot"></span>
+          <span>En línea</span>
+        </div>
+
+        <!-- Pantalla completa -->
+        <button class="icon-btn" id="btn-fullscreen" title="Modo Pantalla Completa [F11]">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+
         <div id="register-status"></div>
         <div class="header-clock" id="header-clock">00:00:00</div>
         <div class="header-user"><i class="fa-solid fa-circle-user"></i> Admin</div>
@@ -1386,6 +1414,24 @@
   </div>
 </div>
 
+<!-- ══════════════ MODAL: GUÍA DE INSTALACIÓN PWA ══════════════ -->
+<div class="modal-bg" id="pwa-install-modal">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-laptop" style="color:var(--gold);margin-right:8px"></i>Instalar Shaden POS en PC</h3>
+      <button class="icon-btn" onclick="closeModal('pwa-install-modal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px">
+      <div id="pwa-modal-content">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-gold" onclick="closeModal('pwa-install-modal')" style="width:100%">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ MODAL: PRODUCTO ══════════════ -->
 <div class="modal-bg" id="producto-modal">
   <div class="modal-box modal-lg">
@@ -1522,6 +1568,7 @@
 <script src="js/pos-db.js"></script>
 <script src="js/pos-utils.js"></script>
 <script src="js/pos-scanner.js"></script>
+<script src="js/pos-pwa.js"></script>
 <script src="js/pos-app.js"></script>
 </body>
 </html>

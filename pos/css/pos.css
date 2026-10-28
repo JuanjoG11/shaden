@@ -2157,3 +2157,110 @@ textarea.form-ctrl { resize: vertical; min-height: 80px; }
   gap: 8px;
 }
 
+/* ════════════════════════════════════════════
+   PWA EXÓTICA PARA PC (DESKTOP APP STYLES)
+════════════════════════════════════════════ */
+
+/* Botón de instalación en PC */
+.pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(212,169,106,.2), rgba(181,134,74,.1));
+  border: 1.5px solid var(--gold);
+  color: var(--gold-dark);
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 2px 10px rgba(181,134,74,.15);
+}
+.pwa-install-btn:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--gold-glow);
+}
+.pwa-install-btn.pulse {
+  animation: pwaPulse 2.4s infinite;
+}
+@keyframes pwaPulse {
+  0% { box-shadow: 0 0 0 0 rgba(212,169,106,.4); }
+  70% { box-shadow: 0 0 0 10px rgba(212,169,106,0); }
+  100% { box-shadow: 0 0 0 0 rgba(212,169,106,0); }
+}
+
+/* Indicador de red en vivo (Radar Pulse) */
+.pwa-net-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  font-size: .75rem;
+  font-weight: 600;
+  user-select: none;
+  transition: all .25s ease;
+}
+.pwa-net-status .net-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+.pwa-net-status.online {
+  background: rgba(39, 160, 106, 0.08);
+  border: 1px solid rgba(39, 160, 106, 0.25);
+  color: var(--green);
+}
+.pwa-net-status.online .net-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(39,160,106,.6);
+}
+.pwa-net-status.online .net-dot::after {
+  content: '';
+  position: absolute;
+  top: -2px; left: -2px; right: -2px; bottom: -2px;
+  border-radius: 50%;
+  border: 1.5px solid var(--green);
+  animation: netRadar 2s infinite ease-out;
+}
+.pwa-net-status.offline {
+  background: rgba(192, 57, 43, 0.1);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  color: var(--red);
+}
+.pwa-net-status.offline .net-dot {
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(192,57,43,.6);
+}
+@keyframes netRadar {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Botón fullscreen en header */
+#btn-fullscreen {
+  color: var(--text2);
+  transition: all .15s ease;
+}
+#btn-fullscreen:hover {
+  color: var(--gold-dark);
+  background: var(--cream-dark);
+}
+
+/* Modo Standalone (App de PC instalada sin barras de navegador) */
+body.pwa-standalone {
+  user-select: none;
+}
+body.pwa-standalone .pos-header {
+  border-bottom: 1.5px solid rgba(181, 134, 74, 0.2);
+}
+body.pwa-standalone .sidebar-footer {
+  padding-bottom: 16px;
+}
+
+

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1611" />
+      <stop offset="50%" stop-color="#120e0b" />
+      <stop offset="100%" stop-color="#0a0806" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5e1b5" />
+      <stop offset="25%" stop-color="#d4a96a" />
+      <stop offset="60%" stop-color="#b5864a" />
+      <stop offset="100%" stop-color="#8a5e2c" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d4a96a" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#b5864a" stop-opacity="0" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.6" />
+    </filter>
+    <filter id="goldGlow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#d4a96a" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="16" y="16" width="480" height="480" rx="110" ry="110" fill="url(#bgGrad)" stroke="url(#goldGrad)" stroke-width="6" filter="url(#shadow)" />
+  
+  <!-- Subtle Inner Ring -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="none" stroke="url(#glowGrad)" stroke-width="2" />
+
+  <!-- Shaden Logo Monogram (S) & Diamond/Star Accents -->
+  <g filter="url(#goldGlow)">
+    <!-- Star/Diamond Crown Accent -->
+    <path d="M 256 95 L 266 120 L 291 130 L 266 140 L 256 165 L 246 140 L 221 130 L 246 120 Z" fill="url(#goldGrad)" />
+    
+    <!-- Stylized Luxury 'S' -->
+    <path d="M 330 195 
+             C 330 155, 290 145, 256 145 
+             C 205 145, 175 170, 175 210 
+             C 175 255, 225 270, 270 285 
+             C 320 300, 345 320, 345 365 
+             C 345 415, 305 440, 256 440 
+             C 195 440, 165 405, 165 370 
+             L 205 365 
+             C 205 390, 225 405, 256 405 
+             C 285 405, 305 390, 305 365 
+             C 305 330, 265 315, 220 300 
+             C 175 285, 140 260, 140 210 
+             C 140 155, 185 115, 256 115 
+             C 320 115, 365 150, 365 195 
+             Z" 
+          fill="url(#goldGrad)" />
+
+    <!-- POS Badge Pill in lower right -->
+    <g transform="translate(265, 335)">
+      <rect x="0" y="0" width="160" height="52" rx="26" ry="26" fill="#14110d" stroke="url(#goldGrad)" stroke-width="3" filter="url(#shadow)"/>
+      <text x="80" y="34" font-family="'Jost', 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="800" fill="url(#goldGrad)" text-anchor="middle" letter-spacing="3">POS</text>
+    </g>
+  </g>
+</svg>
