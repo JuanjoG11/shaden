@@ -3243,6 +3243,351 @@ function _bindLayawaySearch() {
   inp.addEventListener('input', debounce(() => renderLayaways(_layawayFilter)));
 }
 
+/* ── Crear apartado manual (desde la sección Apartados, sin carrito) ── */
+
+// Carrito temporal del modal de apartado manual
+let _mlayItems = [];
+
+async function openNewLayawayManual() {
+  _mlayItems = [];
+  const today30 = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const todayMin = new Date().toISOString().slice(0, 10);
+
+  const bg = document.createElement('div');
+  bg.id = 'mlay-modal-bg';
+  bg.className = 'modal-bg open';
+  bg.innerHTML = `
+    <div class="modal-box modal-lg">
+      <div class="modal-hdr">
+        <h3><i class="fa-solid fa-hand-holding-dollar" style="color:var(--gold);margin-right:8px"></i>Nuevo Apartado</h3>
+        <button class="icon-btn" onclick="this.closest('.modal-bg').remove()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-grid">
+          <!-- Cliente -->
+          <div class="form-group full-col">
+            <label>Cliente *</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" class="form-ctrl" id="mlay-cust-name" placeholder="Nombre del cliente" style="flex:1" />
+              <input type="text" class="form-ctrl" id="mlay-cust-phone" placeholder="Teléfono" style="width:150px" />
+            </div>
+          </div>
+
+          <!-- Buscador de productos -->
+          <div class="form-group full-col">
+            <label><i class="fa-solid fa-box-open" style="margin-right:4px"></i>Productos a apartar</label>
+            <div style="position:relative">
+              <input type="text" class="form-ctrl" id="mlay-prod-search"
+                placeholder="Buscar producto por nombre…"
+                autocomplete="off"
+                oninput="_mlaySearchProducts(this.value)" />
+              <div id="mlay-prod-dropdown" style="
+                display:none;position:absolute;top:100%;left:0;right:0;z-index:9999;
+                background:var(--cream-light,#fff);border:1px solid var(--cream-mid,#ddd);
+                border-radius:8px;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de productos seleccionados -->
+          <div class="form-group full-col" id="mlay-items-wrap" style="display:none">
+            <div id="mlay-items-list"></div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:4px">
+          <!-- Abono inicial -->
+          <div class="form-group">
+            <label><i class="fa-solid fa-coins" style="color:var(--gold);margin-right:4px"></i>Abono inicial</label>
+            <input type="text" inputmode="numeric" class="form-ctrl" id="mlay-initial-payment"
+              placeholder="0" />
+          </div>
+
+          <!-- Método de pago del abono -->
+          <div class="form-group">
+            <label>Método del abono</label>
+            <select class="form-ctrl" id="mlay-payment-method">
+              <option value="cash">Efectivo</option>
+              <option value="card">Tarjeta</option>
+              <option value="transfer">Transferencia</option>
+            </select>
+          </div>
+
+          <!-- Fecha límite -->
+          <div class="form-group">
+            <label><i class="fa-solid fa-calendar" style="color:var(--gold);margin-right:4px"></i>Fecha límite de pago</label>
+            <input type="date" class="form-ctrl" id="mlay-expires-at"
+              min="${todayMin}" value="${today30}" />
+          </div>
+
+          <!-- Notas -->
+          <div class="form-group">
+            <label>Notas</label>
+            <input type="text" class="form-ctrl" id="mlay-notes"
+              placeholder="Ej. Pago en cuotas semanales…" />
+          </div>
+        </div>
+
+        <!-- Balance visual -->
+        <div class="lay-balance-display" id="mlay-balance-display">
+          <div class="lay-balance-row">
+            <span>Total del apartado</span>
+            <span class="fw-bold" id="mlay-balance-total">${fmt(0)}</span>
+          </div>
+          <div class="lay-balance-row">
+            <span>Abono inicial</span>
+            <span class="text-green fw-bold" id="mlay-balance-paid">${fmt(0)}</span>
+          </div>
+          <div class="lay-balance-row lay-balance-pending">
+            <span>Saldo pendiente</span>
+            <span class="fw-bold" id="mlay-balance-pending-amt" style="color:var(--orange)">${fmt(0)}</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-outline" onclick="this.closest('.modal-bg').remove()">Cancelar</button>
+        <button class="btn btn-gold" id="mlay-save-btn" onclick="saveManualLayaway(this)">
+          <i class="fa-solid fa-hand-holding-dollar"></i> Guardar apartado
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+
+  // Bind input COP con puntos de miles
+  bindCopInput('mlay-initial-payment', () => _mlayUpdateBalance());
+
+  // Cerrar dropdown al hacer click fuera
+  bg.addEventListener('click', e => {
+    if (!e.target.closest('#mlay-prod-search') && !e.target.closest('#mlay-prod-dropdown')) {
+      document.getElementById('mlay-prod-dropdown').style.display = 'none';
+    }
+  });
+}
+
+function _mlaySearchProducts(q) {
+  const dd = document.getElementById('mlay-prod-dropdown');
+  if (!dd) return;
+  const val = q.trim().toLowerCase();
+  if (!val) { dd.style.display = 'none'; return; }
+
+  const results = (State.products || [])
+    .filter(p => p.name.toLowerCase().includes(val))
+    .slice(0, 12);
+
+  if (!results.length) {
+    dd.innerHTML = `<div style="padding:10px 14px;color:var(--text3);font-size:.85rem">Sin resultados</div>`;
+    dd.style.display = 'block';
+    return;
+  }
+
+  dd.innerHTML = results.map(p => {
+    const stock = State.stock[p.id] ?? '?';
+    return `
+      <div onclick="_mlayAddProduct('${p.id}')" style="
+        padding:8px 14px;cursor:pointer;display:flex;justify-content:space-between;
+        align-items:center;gap:8px;font-size:.88rem;border-bottom:1px solid var(--cream-mid,#eee)
+      " onmouseover="this.style.background='var(--cream-mid,#f5f5f5)'"
+         onmouseout="this.style.background=''">
+        <div>
+          <div style="font-weight:600">${p.name}</div>
+          <div style="font-size:.75rem;color:var(--text3)">${p.category || ''} · Stock: ${stock}</div>
+        </div>
+        <div style="font-weight:700;color:var(--gold-dark);white-space:nowrap">${fmt(p.price)}</div>
+      </div>`;
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function _mlayAddProduct(productId) {
+  const prod = (State.products || []).find(p => p.id === productId);
+  if (!prod) return;
+
+  // Si ya está en la lista, solo incrementa cantidad
+  const existing = _mlayItems.find(i => i.product_id === productId);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    _mlayItems.push({
+      product_id:   prod.id,
+      product_name: prod.name,
+      category:     prod.category || '',
+      unit_price:   prod.price,
+      quantity:     1,
+      discount_pct: 0,
+    });
+  }
+
+  // Limpiar búsqueda
+  const input = document.getElementById('mlay-prod-search');
+  const dd    = document.getElementById('mlay-prod-dropdown');
+  if (input) input.value = '';
+  if (dd)    dd.style.display = 'none';
+
+  _mlayRenderItems();
+  _mlayUpdateBalance();
+}
+
+function _mlayRenderItems() {
+  const wrap = document.getElementById('mlay-items-wrap');
+  const list = document.getElementById('mlay-items-list');
+  if (!wrap || !list) return;
+
+  if (!_mlayItems.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  list.innerHTML = `
+    <div style="border:1px solid var(--cream-mid,#ddd);border-radius:8px;overflow:hidden">
+      ${_mlayItems.map((item, idx) => {
+        const line = item.unit_price * item.quantity;
+        return `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;
+          border-bottom:1px solid var(--cream-mid,#eee);font-size:.87rem"
+          id="mlay-item-row-${idx}">
+          <div style="flex:1;font-weight:600">${item.product_name}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="icon-btn" style="width:26px;height:26px;font-size:.8rem"
+              onclick="_mlayQty(${idx},-1)"><i class="fa-solid fa-minus"></i></button>
+            <span style="min-width:22px;text-align:center;font-weight:700">${item.quantity}</span>
+            <button class="icon-btn" style="width:26px;height:26px;font-size:.8rem"
+              onclick="_mlayQty(${idx},1)"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <div style="width:80px;text-align:right;color:var(--text2);font-size:.8rem">${fmt(item.unit_price)} c/u</div>
+          <div style="width:90px;text-align:right;font-weight:700;color:var(--brown)">${fmt(line)}</div>
+          <button class="icon-btn" style="color:var(--red);width:26px;height:26px;font-size:.8rem"
+            onclick="_mlayRemove(${idx})"><i class="fa-solid fa-xmark"></i></button>
+        </div>`;
+      }).join('')}
+      <div style="padding:8px 12px;display:flex;justify-content:flex-end;
+        font-weight:700;font-size:.95rem;background:var(--cream-light,#faf8f5)">
+        Total: <span style="color:var(--gold-dark);margin-left:8px">${fmt(_mlayTotal())}</span>
+      </div>
+    </div>`;
+}
+
+function _mlayTotal() {
+  return _mlayItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
+}
+
+function _mlayQty(idx, delta) {
+  if (!_mlayItems[idx]) return;
+  _mlayItems[idx].quantity = Math.max(1, _mlayItems[idx].quantity + delta);
+  _mlayRenderItems();
+  _mlayUpdateBalance();
+}
+
+function _mlayRemove(idx) {
+  _mlayItems.splice(idx, 1);
+  _mlayRenderItems();
+  _mlayUpdateBalance();
+}
+
+function _mlayUpdateBalance() {
+  const total   = _mlayTotal();
+  const paid    = getCopValue('mlay-initial-payment');
+  const pending = total - paid;
+  const totalEl = document.getElementById('mlay-balance-total');
+  const paidEl  = document.getElementById('mlay-balance-paid');
+  const pendEl  = document.getElementById('mlay-balance-pending-amt');
+  if (totalEl) totalEl.textContent = fmt(total);
+  if (paidEl)  paidEl.textContent  = fmt(paid);
+  if (pendEl) {
+    pendEl.textContent = fmt(Math.max(0, pending));
+    pendEl.style.color = pending <= 0 ? 'var(--green)' : 'var(--orange)';
+  }
+}
+
+async function saveManualLayaway(btn) {
+  const custName  = document.getElementById('mlay-cust-name')?.value?.trim();
+  const custPhone = document.getElementById('mlay-cust-phone')?.value?.trim() || '';
+  const total     = _mlayTotal();
+  const initPay   = getCopValue('mlay-initial-payment');
+  const payMethod = document.getElementById('mlay-payment-method')?.value || 'cash';
+  const expiresAt = document.getElementById('mlay-expires-at')?.value || null;
+  const notes     = document.getElementById('mlay-notes')?.value?.trim() || '';
+
+  if (!custName)          { Toast.error('El nombre del cliente es obligatorio'); return; }
+  if (!_mlayItems.length) { Toast.error('Agrega al menos un producto al apartado'); return; }
+  if (total <= 0)         { Toast.error('El total del apartado debe ser mayor a 0'); return; }
+  if (initPay > total)    { Toast.error('El abono no puede superar el total'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…';
+
+  try {
+    // Buscar o crear cliente
+    let customerId = null;
+    const found = await PosDB.Customers.search(custName);
+    const match = found.find(c => c.name.toLowerCase() === custName.toLowerCase());
+    if (match) {
+      customerId = match.id;
+    } else {
+      const newCust = await PosDB.Customers.add({ name: custName, phone: custPhone });
+      customerId = newCust.id;
+    }
+
+    const status = initPay >= total ? 'ready' : 'active';
+
+    const layawayPayload = {
+      customer_id:    customerId,
+      customer_name:  custName,
+      customer_phone: custPhone,
+      total,
+      amount_paid:    initPay,
+      discount_pct:   0,
+      discount_amt:   0,
+      expires_at:     expiresAt || null,
+      status,
+      notes,
+      cashier: 'Admin',
+    };
+
+    const itemsPayload = _mlayItems.map(i => ({
+      product_id:   i.product_id,
+      product_name: i.product_name,
+      category:     i.category || '',
+      unit_price:   i.unit_price,
+      quantity:     i.quantity,
+      discount_pct: 0,
+      line_total:   i.unit_price * i.quantity,
+    }));
+
+    const layaway = await PosDB.Layaways.create(layawayPayload, itemsPayload);
+
+    // Descontar stock
+    for (const item of _mlayItems) {
+      await PosDB.Stock.adjust(
+        item.product_id, -item.quantity, 'out',
+        `Apartado ${_layawayNum(layaway.layaway_num)}`, layaway.id
+      );
+      if (State.stock[item.product_id] !== undefined)
+        State.stock[item.product_id] = Math.max(0, (State.stock[item.product_id] || 0) - item.quantity);
+    }
+
+    // Registrar abono inicial si hay
+    if (initPay > 0) {
+      await PosDB.Layaways.addPayment(layaway.id, {
+        amount: initPay, payment_method: payMethod,
+        notes: 'Abono inicial', cashier: 'Admin',
+      });
+    }
+
+    _mlayItems = [];
+    btn.closest('.modal-bg').remove();
+
+    Toast.success(`Apartado ${_layawayNum(layaway.layaway_num)} creado — Saldo: ${fmt(total - initPay)}`);
+    _refreshLayawayBadge();
+    renderLayaways();
+    setTimeout(() => printLayawayReceipt(layaway.id), 400);
+
+  } catch(e) {
+    Toast.error('Error: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> Guardar apartado';
+  }
+}
+
 /* ── Crear apartado desde el carrito ── */
 async function openLayawayFromCart() {
   if (!State.cart.length) { Toast.error('El carrito está vacío'); return; }
@@ -3298,9 +3643,8 @@ async function openLayawayFromCart() {
           <!-- Abono inicial -->
           <div class="form-group">
             <label><i class="fa-solid fa-coins" style="color:var(--gold);margin-right:4px"></i>Abono inicial</label>
-            <input type="number" class="form-ctrl" id="lay-initial-payment"
-              placeholder="0" min="0" step="1000"
-              oninput="updateLayawayBalance(${total})" />
+            <input type="text" inputmode="numeric" class="form-ctrl" id="lay-initial-payment"
+              placeholder="0" />
           </div>
 
           <!-- Método de pago del abono -->
@@ -3354,10 +3698,13 @@ async function openLayawayFromCart() {
       </div>
     </div>`;
   document.body.appendChild(bg);
+
+  // Bind input COP con puntos de miles
+  bindCopInput('lay-initial-payment', () => updateLayawayBalance(total));
 }
 
 function updateLayawayBalance(total) {
-  const paid    = +document.getElementById('lay-initial-payment')?.value || 0;
+  const paid    = getCopValue('lay-initial-payment');
   const pending = total - paid;
   const paidEl  = document.getElementById('lay-balance-paid');
   const pendEl  = document.getElementById('lay-balance-pending-amt');
@@ -3369,7 +3716,7 @@ function updateLayawayBalance(total) {
 async function saveLayaway(total, btn) {
   const custName  = document.getElementById('lay-cust-name')?.value?.trim();
   const custPhone = document.getElementById('lay-cust-phone')?.value?.trim() || '';
-  const initPay   = +document.getElementById('lay-initial-payment')?.value || 0;
+  const initPay   = getCopValue('lay-initial-payment');
   const payMethod = document.getElementById('lay-payment-method')?.value || 'cash';
   const expiresAt = document.getElementById('lay-expires-at')?.value || null;
   const notes     = document.getElementById('lay-notes')?.value?.trim() || '';
@@ -3541,8 +3888,8 @@ async function openLayawayDetail(layawayId) {
             <div class="form-grid cols-1" style="gap:10px">
               <div class="form-group">
                 <label>Monto del abono</label>
-                <input type="number" class="form-ctrl" id="lay-new-payment-amt"
-                  placeholder="0" min="1" max="${balance}"
+                <input type="text" inputmode="numeric" class="form-ctrl" id="lay-new-payment-amt"
+                  placeholder="0"
                   style="font-size:1rem;font-weight:700" />
                 <p style="font-size:.72rem;color:var(--text3);margin-top:3px">Saldo pendiente: <b>${fmt(balance)}</b></p>
               </div>
@@ -3588,12 +3935,15 @@ async function openLayawayDetail(layawayId) {
       </div>
     </div>`;
   document.body.appendChild(bg);
+
+  // Bind input COP con puntos de miles (solo si el campo existe — apartado activo con saldo)
+  bindCopInput('lay-new-payment-amt');
 }
 
 /* ── Registrar abono ── */
 async function addLayawayPayment(layawayId, total, btn) {
   const bg     = btn.closest('.modal-bg');
-  const amount = +bg.querySelector('#lay-new-payment-amt')?.value || 0;
+  const amount = getCopValue('lay-new-payment-amt');
   const method = bg.querySelector('#lay-new-payment-method')?.value || 'cash';
   const notes  = bg.querySelector('#lay-new-payment-notes')?.value?.trim() || '';
 

@@ -114,6 +114,52 @@ function debounce(fn, ms = 320) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
+/* ── Input de dinero COP con puntos de miles ──────────────────────────
+   Uso: bindCopInput('my-input-id', onChangeFn)
+   - Convierte el input a type="text"
+   - Muestra el valor formateado con puntos: 1.250.000
+   - El valor numérico real está en el atributo data-raw
+   - Para leer el valor: getCopValue('my-input-id')
+   ──────────────────────────────────────────────────────────────────── */
+function bindCopInput(id, onChangeFn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.type = 'text';
+  el.inputMode = 'numeric';
+  el.dataset.raw = '0';
+
+  el.addEventListener('input', () => {
+    // Extraer solo dígitos
+    const digits = el.value.replace(/\D/g, '');
+    const num = parseInt(digits, 10) || 0;
+    el.dataset.raw = String(num);
+    // Formatear con puntos de miles
+    el.value = num > 0 ? num.toLocaleString('es-CO') : '';
+    // Mover cursor al final
+    const len = el.value.length;
+    el.setSelectionRange(len, len);
+    if (typeof onChangeFn === 'function') onChangeFn(num);
+  });
+
+  el.addEventListener('focus', () => {
+    // Al enfocar, mostrar solo dígitos para facilitar borrado
+    const num = parseInt(el.dataset.raw, 10) || 0;
+    el.value = num > 0 ? String(num) : '';
+  });
+
+  el.addEventListener('blur', () => {
+    // Al salir, volver a formatear
+    const num = parseInt(el.dataset.raw, 10) || 0;
+    el.value = num > 0 ? num.toLocaleString('es-CO') : '';
+  });
+}
+
+function getCopValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseInt(el.dataset.raw, 10) || 0;
+}
+
 /* ── Placeholder image para productos sin imagen ── */
 function productImg(src, name) {
   if (src && src.startsWith('http')) return `<img src="${src}" alt="${name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=ppc-img-placeholder><i class=\\'fa-solid fa-box\\'></i></div>'" />`;
