@@ -210,7 +210,11 @@ const PosDB = (() => {
   /* ══ CASH REGISTER ══════════════════════════ */
   const CashRegister = {
     async getOpen() {
-      const { data } = await db.from('cash_registers').select('*').eq('status', 'open').single();
+      const { data } = await db.from('cash_registers')
+        .select('*').eq('status', 'open')
+        .order('opened_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       return data || null;
     },
     async open(amount, cashier) {
