@@ -1045,8 +1045,7 @@ async function renderSales(filter = 'today') {
       <td>
         <div class="td-actions">
           <button class="btn btn-sm btn-outline" style="color:var(--green);border-color:rgba(39,160,106,.3)" onclick="openWhatsAppReceipt('${s.id}')" title="Enviar recibo por WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
-          <button class="btn btn-sm btn-outline" onclick="printInvoice('${s.id}', false)" title="Imprimir factura"><i class="fa-solid fa-print"></i></button>
-          <button class="btn btn-sm btn-ghost" onclick="printInvoice('${s.id}', true)" title="Recibo térmico"><i class="fa-solid fa-receipt"></i></button>
+          <button class="btn btn-sm btn-outline" onclick="printInvoice('${s.id}')" title="Imprimir factura"><i class="fa-solid fa-print"></i></button>
           ${s.status === 'completed' ? `<button class="btn btn-sm btn-outline" onclick="openRefundModal('${s.id}')" title="Devolución"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
           ${s.status === 'completed' ? `<button class="btn btn-sm btn-danger" onclick="cancelSale('${s.id}')" title="Anular"><i class="fa-solid fa-ban"></i></button>` : ''}
         </div>

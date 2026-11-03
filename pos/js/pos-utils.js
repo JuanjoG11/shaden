@@ -166,105 +166,232 @@ function productImg(src, name) {
   return `<div class="ppc-img-placeholder"><i class="fa-solid fa-box"></i></div>`;
 }
 
-/* ── Imprimir factura — versión completa con config ── */
-function printInvoice(saleId, thermal = false) {
+/* ── Imprimir factura — ticket térmico 80mm bonito ── */
+function printInvoice(saleId) {
   PosDB.Sales.getById(saleId).then(async sale => {
     if (!sale) return;
     const cfg = window._posSettings || await PosDB.PosSettings.get();
-    const w = window.open('', '_blank', thermal ? 'width=340,height=700' : 'width=600,height=800');
-    const items = (sale.sale_items || []).map(it => thermal ? `
-      <div class="t-item">
-        <div>${it.product_name}${it.discount_pct > 0 ? ` <small>(-${it.discount_pct}%)</small>` : ''}</div>
-        <div class="t-item-row"><span>${it.quantity} x ${fmt(it.unit_price)}</span><span>${fmt(it.line_total)}</span></div>
-      </div>` : `
-      <tr>
-        <td>${it.product_name}</td>
-        <td style="text-align:center">${it.quantity}</td>
-        <td style="text-align:right">${fmt(it.unit_price)}</td>
-        ${it.discount_pct > 0 ? `<td style="text-align:center">${it.discount_pct}%</td>` : '<td></td>'}
-        <td style="text-align:right">${fmt(it.line_total)}</td>
-      </tr>`).join('');
+    const w = window.open('', '_blank', 'width=380,height=720');
+    if (!w) { Toast.error('Permite las ventanas emergentes para imprimir'); return; }
 
-    if (thermal) {
-      w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-        <title>Recibo ${cfg.invoice_prefix}-${String(sale.invoice_num).padStart(5,'0')}</title>
-        <style>
-          * { box-sizing:border-box; margin:0; padding:0; }
-          body { font-family: 'Courier New', monospace; font-size: 12px; color: #000; width: 72mm; padding: 4mm; }
-          h1 { font-size:18px; text-align:center; margin-bottom:2px; }
-          .center { text-align:center; }
-          .line { border-top:1px dashed #000; margin:5px 0; }
-          .t-item { margin:4px 0; }
-          .t-item-row { display:flex; justify-content:space-between; }
-          .total-row { display:flex; justify-content:space-between; font-weight:bold; font-size:14px; margin-top:4px; border-top:1px solid #000; padding-top:4px; }
-          .sub-row { display:flex; justify-content:space-between; font-size:11px; }
-          .footer { text-align:center; font-size:10px; margin-top:8px; color:#555; }
-          @media print { button { display:none; } }
-        </style></head><body>
-        <h1>${cfg.store_name}</h1>
-        <div class="center" style="font-size:10px">${cfg.store_address}</div>
-        <div class="center" style="font-size:10px">${cfg.store_phone}</div>
-        <div class="line"></div>
-        <div class="center"><b>RECIBO ${cfg.invoice_prefix}-${String(sale.invoice_num).padStart(5,'0')}</b></div>
-        <div class="sub-row"><span>${fmtDateTime(sale.created_at)}</span><span>${sale.cashier||'Admin'}</span></div>
-        <div class="sub-row"><span>Cliente: ${sale.customer_name||'General'}</span></div>
-        <div class="line"></div>
-        ${items}
-        <div class="line"></div>
-        ${sale.discount_amt > 0 ? `<div class="sub-row"><span>Descuento (${sale.discount_pct}%):</span><span>-${fmt(sale.discount_amt)}</span></div>` : ''}
-        ${sale.tax_amt > 0 ? `<div class="sub-row"><span>IVA (${sale.tax_pct}%):</span><span>${fmt(sale.tax_amt)}</span></div>` : ''}
-        <div class="total-row"><span>TOTAL</span><span>${fmt(sale.total)}</span></div>
-        <div class="sub-row"><span>Pago (${payMethodLabel(sale.payment_method)}):</span><span>${fmt(sale.amount_paid)}</span></div>
-        ${sale.change_given > 0 ? `<div class="sub-row"><span>Cambio:</span><span>${fmt(sale.change_given)}</span></div>` : ''}
-        ${sale.sale_notes ? `<div class="line"></div><div style="font-size:11px">Nota: ${sale.sale_notes}</div>` : ''}
-        <div class="line"></div>
-        <div class="footer">${cfg.receipt_footer}</div>
-        <div style="text-align:center;margin-top:10px"><button onclick="window.print()">🖨 Imprimir</button></div>
-        </body></html>`);
-    } else {
-      w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-        <title>Factura ${cfg.invoice_prefix}-${String(sale.invoice_num).padStart(5,'0')}</title>
-        <style>
-          body { font-family: monospace; color: #1a1a1a; padding: 24px; font-size: 13px; }
-          h1 { font-size: 1.5rem; margin: 0; } h4 { margin: 0; font-size: .9rem; }
-          table { width: 100%; border-collapse: collapse; margin: 14px 0; }
-          th { border-bottom: 2px solid #000; padding: 5px 4px; text-align: left; font-size: .78rem; text-transform: uppercase; }
-          td { padding: 4px; border-bottom: 1px solid #eee; font-size: .82rem; }
-          .right { text-align: right; } .center { text-align: center; }
-          .total-section { text-align: right; margin-top: 8px; }
-          .total-section p { margin: 3px 0; font-size: .88rem; }
-          .grand-total { font-size: 1.1rem; font-weight: 700; border-top: 2px solid #000; padding-top: 5px; margin-top: 5px; }
-          .footer { text-align: center; margin-top: 20px; font-size: .75rem; color: #666; }
-          @media print { button { display: none; } }
-        </style></head><body>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
-          <div><h1>${cfg.store_name}</h1><h4>Tienda de Variedades</h4><p style="font-size:.78rem;color:#666">${cfg.store_address} · ${cfg.store_phone}</p></div>
-          <div style="text-align:right"><h2 style="font-size:1.1rem;margin:0">FACTURA</h2>
-            <p style="font-size:.82rem;margin:2px 0">${cfg.invoice_prefix}-${String(sale.invoice_num).padStart(5,'0')}</p>
-            <p style="font-size:.82rem;margin:0;color:#666">${fmtDateTime(sale.created_at)}</p>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:.82rem;background:#f5f5f5;padding:8px 10px;border-radius:4px;margin-bottom:8px">
-          <span><b>Cliente:</b> ${sale.customer_name||'General'}</span>
-          <span><b>Cajero:</b> ${sale.cashier||'Admin'}</span>
-          <span><b>Pago:</b> ${payMethodLabel(sale.payment_method)}</span>
-        </div>
-        ${sale.sale_notes ? `<div style="background:#fffbe6;border:1px solid #f0d060;padding:6px 10px;border-radius:4px;font-size:.82rem;margin-bottom:8px"><b>Nota:</b> ${sale.sale_notes}</div>` : ''}
-        <table>
-          <thead><tr><th>Producto</th><th class="center">Cant.</th><th class="right">P. Unit</th><th class="center">Desc.</th><th class="right">Total</th></tr></thead>
-          <tbody>${items}</tbody>
-        </table>
-        <div class="total-section">
-          <p>Subtotal: <b>${fmt(sale.subtotal)}</b></p>
-          ${sale.discount_amt > 0 ? `<p>Descuento (${sale.discount_pct}%): <b>-${fmt(sale.discount_amt)}</b></p>` : ''}
-          ${sale.tax_amt > 0 ? `<p>IVA (${sale.tax_pct}%): <b>${fmt(sale.tax_amt)}</b></p>` : ''}
-          <p class="grand-total">TOTAL: ${fmt(sale.total)}</p>
-          ${sale.change_given > 0 ? `<p>Cambio: <b>${fmt(sale.change_given)}</b></p>` : ''}
-        </div>
-        <div class="footer"><p>${cfg.receipt_footer}</p></div>
-        <div style="text-align:center;margin-top:20px"><button onclick="window.print()">🖨️ Imprimir</button></div>
-        </body></html>`);
+    const invoiceNum = `${cfg.invoice_prefix || 'FAC'}-${String(sale.invoice_num).padStart(5,'0')}`;
+    const storeName = cfg.store_name || 'Shaden';
+    const storeAddr = cfg.store_address || '';
+    const storePhone = cfg.store_phone || '';
+    const footer = cfg.receipt_footer || '¡Gracias por tu compra!';
+
+    const items = (sale.sale_items || []).map(it => {
+      const hasDisc = it.discount_pct > 0;
+      return `
+        <tr>
+          <td class="prod-name">${it.product_name}${hasDisc ? `<br><small class="disc-tag">Desc. ${it.discount_pct}%</small>` : ''}</td>
+          <td class="qty">${it.quantity}</td>
+          <td class="price">${fmt(it.unit_price)}</td>
+          <td class="total">${fmt(it.line_total)}</td>
+        </tr>`;
+    }).join('');
+
+    w.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Factura ${invoiceNum}</title>
+  <style>
+    @page { margin: 4mm; size: 80mm auto; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 11.5px;
+      color: #000;
+      width: 72mm;
+      background: #fff;
+      padding: 4mm 2mm;
     }
+    /* ── Encabezado ── */
+    .header { text-align: center; margin-bottom: 6px; }
+    .store-name {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .store-sub { font-size: 10px; color: #333; margin-top: 1px; }
+    .store-phone { font-size: 10.5px; margin-top: 2px; }
+
+    /* ── Separadores ── */
+    .sep-solid { border: none; border-top: 1.5px solid #000; margin: 5px 0; }
+    .sep-dash  { border: none; border-top: 1px dashed #555; margin: 5px 0; }
+
+    /* ── Info factura ── */
+    .inv-box { text-align: center; margin: 4px 0; }
+    .inv-num { font-size: 13.5px; font-weight: 900; letter-spacing: 1px; }
+    .inv-date { font-size: 10px; color: #444; margin-top: 1px; }
+    .inv-row { display: flex; justify-content: space-between; font-size: 10.5px; margin: 1px 0; }
+    .inv-row span:first-child { color: #444; }
+    .inv-row span:last-child { font-weight: 700; }
+
+    /* ── Tabla de productos ── */
+    table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+    thead tr th {
+      font-size: 9.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 2px 1px 3px;
+      border-bottom: 1.5px solid #000;
+    }
+    th.prod-name { text-align: left; width: 44%; }
+    th.qty  { text-align: center; width: 10%; }
+    th.price { text-align: right; width: 22%; }
+    th.total { text-align: right; width: 24%; }
+    tbody td {
+      font-size: 11px;
+      padding: 3px 1px;
+      border-bottom: 1px dashed #ccc;
+      vertical-align: top;
+    }
+    td.prod-name { text-align: left; }
+    td.qty  { text-align: center; }
+    td.price { text-align: right; white-space: nowrap; }
+    td.total { text-align: right; font-weight: 700; white-space: nowrap; }
+    small.disc-tag { font-size: 9px; color: #888; }
+
+    /* ── Totales ── */
+    .totals { width: 100%; margin-top: 2px; }
+    .totals td { font-size: 11px; padding: 1.5px 1px; }
+    .totals td:last-child { text-align: right; font-weight: 700; }
+    .grand td {
+      font-size: 14px;
+      font-weight: 900;
+      padding-top: 4px;
+      padding-bottom: 3px;
+    }
+    .grand td:first-child { letter-spacing: .5px; }
+    .pago td { font-size: 10.5px; }
+    .cambio td { font-size: 10.5px; color: #555; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      color: #333;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .footer .thanks {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+
+    /* ── Botón solo en pantalla ── */
+    .print-btn {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .print-btn:hover { background: #333; }
+    .print-hint {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      color: #555;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 6px 8px;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    @media print {
+      body { padding: 0; }
+      .print-btn { display: none; }
+      .print-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="store-name">${storeName}</div>
+    ${storeAddr ? `<div class="store-sub">${storeAddr}</div>` : ''}
+    ${storePhone ? `<div class="store-phone">Tel: ${storePhone}</div>` : ''}
+  </div>
+
+  <hr class="sep-solid">
+
+  <div class="inv-box">
+    <div class="inv-num">FACTURA ${invoiceNum}</div>
+    <div class="inv-date">${fmtDateTime(sale.created_at)}</div>
+  </div>
+
+  <hr class="sep-dash">
+
+  <div class="inv-row"><span>Cliente:</span><span>${sale.customer_name || 'Cliente general'}</span></div>
+  <div class="inv-row"><span>Cajero:</span><span>${sale.cashier || 'Admin'}</span></div>
+  <div class="inv-row"><span>Pago:</span><span>${payMethodLabel(sale.payment_method)}</span></div>
+
+  ${sale.sale_notes ? `<div class="inv-row" style="margin-top:3px"><span>Nota:</span><span style="text-align:right;max-width:60%">${sale.sale_notes}</span></div>` : ''}
+
+  <hr class="sep-dash">
+
+  <table>
+    <thead>
+      <tr>
+        <th class="prod-name">Producto</th>
+        <th class="qty">Cant</th>
+        <th class="price">Precio</th>
+        <th class="total">Total</th>
+      </tr>
+    </thead>
+    <tbody>${items}</tbody>
+  </table>
+
+  <hr class="sep-solid">
+
+  <table class="totals">
+    ${sale.subtotal !== sale.total || sale.discount_amt > 0 || sale.tax_amt > 0 ? `
+    <tr><td>Subtotal</td><td>${fmt(sale.subtotal)}</td></tr>` : ''}
+    ${sale.discount_amt > 0 ? `<tr><td>Descuento (${sale.discount_pct}%)</td><td>-${fmt(sale.discount_amt)}</td></tr>` : ''}
+    ${sale.tax_amt > 0 ? `<tr><td>IVA (${sale.tax_pct}%)</td><td>${fmt(sale.tax_amt)}</td></tr>` : ''}
+    <tr class="grand">
+      <td>TOTAL</td>
+      <td>${fmt(sale.total)}</td>
+    </tr>
+    <tr class="pago">
+      <td>Pagado (${payMethodLabel(sale.payment_method)})</td>
+      <td>${fmt(sale.amount_paid)}</td>
+    </tr>
+    ${sale.change_given > 0 ? `<tr class="cambio"><td>Cambio</td><td>${fmt(sale.change_given)}</td></tr>` : ''}
+  </table>
+
+  <hr class="sep-dash">
+
+  <div class="footer">
+    <div class="thanks">¡Gracias por tu compra!</div>
+    <div>${footer}</div>
+    <div style="margin-top:3px;font-size:9.5px">${invoiceNum} · ${fmtDateTime(sale.created_at)}</div>
+  </div>
+
+  <div class="print-hint">
+    <b>⚙️ Al imprimir:</b> selecciona <b>Digital POS E200I</b> como impresora,
+    tamaño de papel <b>80 × 297mm</b> (o «Recibo») y márgenes en <b>Ninguno / Sin márgenes</b>.
+  </div>
+
+  <button class="print-btn" onclick="window.print();">🖨&nbsp; Imprimir</button>
+
+</body>
+</html>`);
     w.document.close();
   }).catch(() => Toast.error('Error al generar factura'));
 }
