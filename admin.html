@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/admin.css" />
   <link rel="stylesheet" href="css/splash.css" />
-</head>
+</head> 
 <body class="admin-body">
 
   <!-- ══════════════ SPLASH SCREEN ══════════════ -->
@@ -174,9 +174,14 @@
             <h2>Productos</h2>
             <p>Gestiona el catálogo de tu tienda</p>
           </div>
-          <button class="btn btn-gold" id="add-product-btn">
-            <i class="fa-solid fa-plus"></i> Nuevo producto
-          </button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-outline" id="bulk-import-btn" title="Importar varios productos a la vez">
+              <i class="fa-solid fa-file-import"></i> Importar masivo
+            </button>
+            <button class="btn btn-gold" id="add-product-btn">
+              <i class="fa-solid fa-plus"></i> Nuevo producto
+            </button>
+          </div>
         </div>
 
         <div class="table-toolbar">
@@ -350,7 +355,7 @@
               <label for="pf-price">Precio (COP)</label>
               <div class="field-wrap">
                 <i class="fa-solid fa-dollar-sign"></i>
-                <input type="number" id="pf-price" placeholder="25000" min="0" />
+                <input type="text" id="pf-price" placeholder="25.000" inputmode="numeric" autocomplete="off" />
               </div>
             </div>
             <div class="field-group pf-full">
@@ -448,6 +453,86 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MODAL IMPORTACIÓN MASIVA ══════════════ -->
+  <div class="modal-overlay" id="bulk-import-modal" role="dialog" aria-modal="true" aria-labelledby="bi-modal-title">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 id="bi-modal-title"><i class="fa-solid fa-file-import" style="margin-right:8px;color:var(--gold)"></i>Importar productos masivo</h3>
+        <button class="modal-close" id="bi-modal-close" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Instrucciones -->
+        <div class="bi-instructions">
+          <p><strong>Formato:</strong> una fila por producto, con 3 columnas separadas por coma o punto y coma:</p>
+          <code class="bi-example">Nombre del producto, CODIGO123, 50</code>
+          <ul class="bi-tips">
+            <li><i class="fa-solid fa-circle-info"></i> El <strong>código</strong> puede ser EAN-13, SKU o cualquier referencia única.</li>
+            <li><i class="fa-solid fa-circle-info"></i> El <strong>precio</strong> se deja vacío para que lo edites después.</li>
+            <li><i class="fa-solid fa-circle-info"></i> Los productos se crean como <em>Activos</em> sin categoría asignada (puedes cambiarla al editar).</li>
+            <li><i class="fa-solid fa-triangle-exclamation" style="color:#c9a84c"></i> Si un código ya existe en la BD, esa fila se omite automáticamente.</li>
+          </ul>
+        </div>
+
+        <!-- Categoría por defecto -->
+        <div class="field-group" style="margin-bottom:16px;">
+          <label for="bi-category">Categoría para todos los productos <span class="req">*</span></label>
+          <div class="field-wrap">
+            <i class="fa-solid fa-tag"></i>
+            <select id="bi-category"></select>
+          </div>
+        </div>
+
+        <!-- Textarea de entrada -->
+        <div class="field-group" style="margin-bottom:16px;">
+          <label for="bi-textarea">Lista de productos</label>
+          <textarea id="bi-textarea" class="bi-textarea" rows="10"
+            placeholder="Labial Mate Rosa, 7790001234560, 30&#10;Collar Dorado, 7790001234561, 15&#10;Set Maquillaje, SKU-MAQ-001, 8"></textarea>
+        </div>
+
+        <!-- Preview -->
+        <div id="bi-preview-wrap" style="display:none">
+          <p class="bi-preview-title">Vista previa — <span id="bi-count">0</span> producto(s) detectado(s):</p>
+          <div class="table-wrap bi-preview-table-wrap">
+            <table class="admin-table bi-preview-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre</th>
+                  <th>Código</th>
+                  <th>Stock inicial</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="bi-preview-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Progreso -->
+        <div id="bi-progress-wrap" style="display:none;margin-top:16px;">
+          <div class="bi-progress-bar-bg">
+            <div class="bi-progress-bar" id="bi-progress-bar" style="width:0%"></div>
+          </div>
+          <p class="bi-progress-text" id="bi-progress-text">Importando…</p>
+        </div>
+
+        <!-- Resultado -->
+        <div id="bi-result" style="display:none;margin-top:12px;"></div>
+
+        <div class="pf-actions" style="margin-top:20px;">
+          <button type="button" class="btn btn-outline" id="bi-cancel">Cancelar</button>
+          <button type="button" class="btn btn-outline" id="bi-parse-btn">
+            <i class="fa-solid fa-eye"></i> Vista previa
+          </button>
+          <button type="button" class="btn btn-gold" id="bi-import-btn" disabled>
+            <i class="fa-solid fa-cloud-arrow-up"></i> Importar
+          </button>
+        </div>
       </div>
     </div>
   </div>

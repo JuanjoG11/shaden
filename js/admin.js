@@ -315,6 +315,21 @@ const ProductsView = (() => {
     $('#pf-cancel').addEventListener('click', closeProductForm);
     $('#product-form-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeProductForm(); });
 
+    // Formateo de precio con puntos de miles (COP)
+    const priceInput = $('#pf-price');
+    priceInput.addEventListener('input', e => {
+      const raw = e.target.value.replace(/\D/g, '');
+      e.target.value = raw ? Number(raw).toLocaleString('es-CO') : '';
+    });
+    priceInput.addEventListener('focus', e => {
+      const raw = e.target.value.replace(/\./g, '').trim();
+      if (raw) e.target.value = raw;
+    });
+    priceInput.addEventListener('blur', e => {
+      const raw = e.target.value.replace(/\D/g, '');
+      e.target.value = raw ? Number(raw).toLocaleString('es-CO') : '';
+    });
+
     $('#pf-image').addEventListener('input', debounce(e => {
       const url  = e.target.value.trim();
       const wrap = $('#img-preview-wrap');
@@ -343,7 +358,7 @@ const ProductsView = (() => {
       $('#pf-id').value       = p.id;
       $('#pf-name').value     = p.name;
       $('#pf-category').value = p.category;
-      $('#pf-price').value    = p.price || '';
+      $('#pf-price').value    = p.price ? Number(p.price).toLocaleString('es-CO') : '';
       $('#pf-desc').value     = p.description || '';
       $('#pf-image').value    = p.image || '';
       $('#pf-badge').value    = p.badge || '';
@@ -387,7 +402,7 @@ const ProductsView = (() => {
       const data = {
         name,
         category:    cat,
-        price:       parseFloat($('#pf-price').value) || null,
+        price:       parseFloat($('#pf-price').value.replace(/\./g, '').replace(/,/g, '.')) || null,
         description: $('#pf-desc').value.trim(),
         image:       $('#pf-image').value.trim(),
         badge:       $('#pf-badge').value,
