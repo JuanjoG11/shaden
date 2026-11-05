@@ -8,6 +8,32 @@ function fmt(n) {
   return '$' + Math.round(n).toLocaleString('es-CO');
 }
 
+/* ── Helper: aplica formato COP con puntos de miles a un input de texto ── */
+function bindPriceInput(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => {
+    const raw = el.value.replace(/\D/g, '');
+    el.value = raw ? Number(raw).toLocaleString('es-CO') : '';
+  });
+  el.addEventListener('focus', () => {
+    const raw = el.value.replace(/\./g, '').trim();
+    if (raw) el.value = raw;
+  });
+  el.addEventListener('blur', () => {
+    const raw = el.value.replace(/\D/g, '');
+    el.value = raw ? Number(raw).toLocaleString('es-CO') : '';
+  });
+}
+
+/* ── Leer precio de un input formateado con puntos ── */
+function readPrice(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const raw = el.value.replace(/\D/g, '');
+  return raw ? parseFloat(raw) : null;
+}
+
 /* ── Formato de fecha corta ── */
 function fmtDate(iso) {
   if (!iso) return '—';

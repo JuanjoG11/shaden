@@ -38,15 +38,15 @@ async function initApp() {
 
   // Carga inicial en paralelo
   try {
-    const [prods, cats, stockData] = await Promise.all([
+    const [prods, cats, stockRaw] = await Promise.all([
       ShadenDB.Products.getActive(),
       ShadenDB.Categories.getAll(),
-      PosDB.Stock.getAll(),
+      PosDB.Stock.getAll().catch(() => []),   // si falla el stock, no bloquea los productos
     ]);
     State.products   = prods;
     State.categories = cats;
     State.stock      = {};
-    stockData.forEach(s => { State.stock[s.product_id] = s.qty; });
+    (stockRaw || []).forEach(s => { State.stock[s.product_id] = s.qty; });
     // Cargar configuración del sistema
     const cfg = await PosDB.PosSettings.get();
     window._posSettings = cfg;
@@ -1093,12 +1093,15 @@ async function renderInventory() {
 
   const q = document.getElementById('inventory-search')?.value?.toLowerCase() || '';
   let rows = stock;
-  if (q) rows = rows.filter(s => (s.products?.name || '').toLowerCase().includes(q));
+  if (q) rows = rows.filter(s => {
+    const prod = State.products.find(p => p.id === s.product_id);
+    return (prod?.name || s.product_id).toLowerCase().includes(q);
+  });
 
   if (!rows.length) { el.innerHTML = '<tr><td colspan="8" class="empty-msg">Sin productos en inventario</td></tr>'; return; }
 
   el.innerHTML = rows.map(s => {
-    const prod = s.products || {};
+    const prod = State.products.find(p => p.id === s.product_id) || {};
     const pct  = s.min_qty > 0 ? Math.min(100, Math.round((s.qty / (s.min_qty * 4)) * 100)) : 50;
     const color = s.qty === 0 ? 'var(--red)' : s.qty <= s.min_qty ? 'var(--orange)' : 'var(--green)';
     return `
@@ -1114,7 +1117,7 @@ async function renderInventory() {
         </div>
       </td>
       <td>${s.min_qty}</td>
-      <td>${statusChip(prod.status)}</td>
+      <td>${statusChip(prod.status || 'active')}</td>
       <td>
         <div class="td-actions">
           <button class="btn btn-sm btn-outline" onclick="openStockEdit('${s.product_id}')"><i class="fa-solid fa-pen"></i></button>
@@ -2296,7 +2299,7 @@ async function openProductoForm(id = null) {
     if (!prod) return;
     document.getElementById('pm-name').value      = prod.name || '';
     document.getElementById('pm-category').value  = prod.category || '';
-    document.getElementById('pm-price').value     = prod.price || '';
+    document.getElementById('pm-price').value     = prod.price ? Number(prod.price).toLocaleString('es-CO') : '';
     document.getElementById('pm-desc').value      = prod.description || '';
     document.getElementById('pm-image').value     = prod.image || '';
     document.getElementById('pm-badge').value     = prod.badge || '';
@@ -2313,7 +2316,7 @@ async function openProductoForm(id = null) {
 
   // Activar escáner para el campo pm-barcode dentro del modal
   _bindModalBarcodeInput();
-
+  bindPriceInput('pm-price');
   openModal('producto-modal');
   setTimeout(() => document.getElementById('pm-name')?.focus(), 150);
 }
@@ -2375,7 +2378,7 @@ function handleProductoScan(code) {
 async function saveProducto() {
   const name     = document.getElementById('pm-name').value.trim();
   const category = document.getElementById('pm-category').value;
-  const price    = parseFloat(document.getElementById('pm-price').value) || null;
+  const price    = readPrice('pm-price');
   const desc     = document.getElementById('pm-desc').value.trim();
   const image    = document.getElementById('pm-image').value.trim();
   const badge    = document.getElementById('pm-badge').value;
@@ -2476,6 +2479,10 @@ function initRegistroRapido() {
       `<option value="${c.id}">${c.name}</option>`
     ).join('');
   }
+
+  // Formateo de precio con puntos de miles
+  bindPriceInput('rr-price');
+  bindPriceInput('rre-price');
 
   // Foco automático al input de escaneo
   _rrFocusInput();
@@ -2656,7 +2663,7 @@ async function rrSaveNew(e) {
   e.preventDefault();
   const name     = document.getElementById('rr-name').value.trim();
   const category = document.getElementById('rr-category').value;
-  const price    = parseFloat(document.getElementById('rr-price').value) || null;
+  const price    = readPrice('rr-price');
   const cost     = parseFloat(document.getElementById('rr-cost').value) || 0;
   const stock    = parseInt(document.getElementById('rr-stock').value) || 0;
   const minStock = parseInt(document.getElementById('rr-min-stock').value) || 5;
@@ -2709,7 +2716,7 @@ async function rrEditExisting() {
 
   document.getElementById('rr-edit-code').textContent = RR.currentCode;
   document.getElementById('rre-name').value    = prod.name || '';
-  document.getElementById('rre-price').value   = prod.price || '';
+  document.getElementById('rre-price').value   = prod.price ? Number(prod.price).toLocaleString('es-CO') : '';
 
   // Cargar datos de stock
   const stockRow = await PosDB.Stock.getByProduct(prod.id);
@@ -2727,7 +2734,7 @@ async function rrSaveEdit(e) {
   if (!prod) return;
 
   const name     = document.getElementById('rre-name').value.trim();
-  const price    = parseFloat(document.getElementById('rre-price').value) || null;
+  const price    = readPrice('rre-price');
   const cost     = parseFloat(document.getElementById('rre-cost').value) || 0;
   const stock    = parseInt(document.getElementById('rre-stock').value) || 0;
   const minStock = parseInt(document.getElementById('rre-min-stock').value) || 5;

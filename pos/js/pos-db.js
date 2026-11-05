@@ -161,7 +161,7 @@ const PosDB = (() => {
   const Stock = {
     async getAll() {
       const { data, error } = await db.from('stock')
-        .select('*, products(id,name,category,price,image,status)')
+        .select('product_id, qty, min_qty, cost_price, updated_at')
         .order('qty');
       check(error, 'Stock.getAll'); return data || [];
     },
