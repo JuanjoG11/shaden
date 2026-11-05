@@ -296,14 +296,25 @@ function renderPOSProducts(query = '') {
   if (!prods.length) { el.innerHTML = '<p class="empty-msg" style="grid-column:1/-1">Sin productos encontrados</p>'; return; }
   el.innerHTML = prods.map(p => {
     const qty = State.stock[p.id] ?? 0;
+    const hasImg = p.image && p.image.startsWith('http');
     return `
     <div class="pos-product-card ${qty === 0 ? 'no-stock' : ''}" data-id="${p.id}" title="${p.name}">
-      ${productImg(p.image, p.name)}
-      <div class="ppc-name">${p.name}</div>
-      ${p.barcode ? `<div class="ppc-barcode"><i class="fa-solid fa-barcode"></i> ${p.barcode}</div>` : ''}
-      <div class="ppc-price">${p.price ? fmt(p.price) : '<span style="color:var(--text3);font-size:.78rem">Sin precio</span>'}</div>
-      <div class="ppc-stock">${qty === 0 ? '<span style="color:var(--red);font-size:.7rem">Sin stock</span>' : `Stock: ${qty}`}</div>
-      <div class="ppc-add-btn"><i class="fa-solid fa-plus"></i></div>
+      <div class="ppc-thumb">
+        ${hasImg
+          ? `<img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<i class=ppc-thumb-icon></i>'" />`
+          : `<i class="ppc-thumb-icon fa-solid fa-box"></i>`}
+      </div>
+      <div class="ppc-body">
+        <div class="ppc-name">${p.name}</div>
+        <div class="ppc-meta">
+          ${p.barcode ? `<span class="ppc-code">${p.barcode}</span>` : ''}
+          <span class="ppc-stock-badge ${qty === 0 ? 'out' : qty <= 3 ? 'low' : ''}">${qty === 0 ? 'Sin stock' : `${qty} uds`}</span>
+        </div>
+      </div>
+      <div class="ppc-right">
+        <div class="ppc-price">${p.price ? fmt(p.price) : '<span class="ppc-noprice">—</span>'}</div>
+        <button class="ppc-add-btn" aria-label="Agregar"><i class="fa-solid fa-plus"></i></button>
+      </div>
     </div>`;
   }).join('');
   el.querySelectorAll('.pos-product-card:not(.no-stock)').forEach(card => {
