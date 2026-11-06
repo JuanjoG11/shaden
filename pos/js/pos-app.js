@@ -874,8 +874,21 @@ ${sale.change_given > 0 ? `💵 Cambio: ${fmt(sale.change_given)}\n` : ''}
     }
     if (phone.length === 10) phone = '57' + phone;
 
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-    window.open(url, '_blank');
+    // Intenta abrir WhatsApp Desktop primero (app instalada en el PC)
+    // Si no está instalado, cae a WhatsApp Web como respaldo
+    const text = encodeURIComponent(msg);
+    const desktopUrl = `whatsapp://send?phone=${phone}&text=${text}`;
+    const webUrl     = `https://web.whatsapp.com/send?phone=${phone}&text=${text}`;
+
+    // Abrimos el protocolo nativo; si el SO no lo maneja en 1.5s, abrimos web
+    const start = Date.now();
+    window.location.href = desktopUrl;
+    setTimeout(() => {
+      // Si la app no reaccionó (el tab sigue visible y activo), abrimos web
+      if (Date.now() - start < 2000 && !document.hidden) {
+        window.open(webUrl, '_blank');
+      }
+    }, 1500);
   }).catch(err => {
     console.error(err);
     Toast.error('Error al generar comprobante de WhatsApp');
