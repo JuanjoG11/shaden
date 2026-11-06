@@ -303,6 +303,10 @@ ${cols('Pagado (' + payMethodLabel(sale.payment_method) + ')', fmt(sale.amount_p
 ${SEP}
 ${center(footer)}
 ${SEP}
+
+
+
+
 </pre>
 <button class="no-print" onclick="window.print()">🖨  Imprimir</button>
 </body>
