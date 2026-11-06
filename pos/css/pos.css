@@ -800,6 +800,31 @@ ul, ol { list-style: none; }
 }
 .ci-line-disc input:focus { border-color: var(--gold); }
 
+/* ── Precio unitario editable en el carrito ── */
+.ci-price-input {
+  width: 92px;
+  background: var(--white);
+  border: 1px solid var(--cream-dark);
+  border-radius: 6px;
+  padding: 3px 7px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text);
+  outline: none;
+  transition: border-color .2s, background .2s;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.ci-price-input::-webkit-outer-spin-button,
+.ci-price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.ci-price-input:focus { border-color: var(--gold); }
+.ci-price-input--alert {
+  border-color: var(--red);
+  background: rgba(255, 107, 107, .10);
+}
+.cart-item--noprice { border-color: var(--red); }
+.cart-item--manual { border-style: dashed; border-color: var(--blush); }
+
 /* ── Cart footer ── */
 .cart-footer {
   border-top: 1px solid var(--cream-mid);

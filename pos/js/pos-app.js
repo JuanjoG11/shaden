@@ -415,6 +415,80 @@ function updateQty(idx, delta) {
   renderCart();
 }
 
+/* ── Editar precio unitario manualmente desde el carrito ── */
+function setCartPrice(idx, val) {
+  const item = State.cart[idx];
+  if (!item) return;
+  item.unit_price = Math.max(0, +val || 0);
+  renderCart();
+}
+
+/* ── Producto manual (sin catálogo) — útil para la inauguración ── */
+function openManualItemModal() {
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg open';
+  bg.id = 'manual-item-modal';
+  bg.innerHTML = `
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-hdr">
+        <h3><i class="fa-solid fa-pen-to-square" style="color:var(--gold);margin-right:8px"></i>Producto Manual</h3>
+        <button class="icon-btn" onclick="this.closest('.modal-bg').remove()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:.8rem;color:var(--text2);margin-bottom:14px">Agrega un producto que no está en el catálogo. Ingresa el nombre y el precio de venta.</p>
+        <div class="form-grid cols-1">
+          <div class="form-group">
+            <label>Nombre del producto *</label>
+            <input type="text" class="form-ctrl" id="mi-name" placeholder="Ej: Producto inaugural" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label>Precio unitario (COP) *</label>
+            <input type="text" inputmode="numeric" class="form-ctrl" id="mi-price" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" class="form-ctrl" id="mi-qty" value="1" min="1" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-outline" onclick="this.closest('.modal-bg').remove()">Cancelar</button>
+        <button class="btn btn-gold" id="mi-add-btn" onclick="addManualItem(this)"><i class="fa-solid fa-plus"></i> Agregar al carrito</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+  bindCopInput('mi-price');
+  setTimeout(() => document.getElementById('mi-name')?.focus(), 90);
+  // Enter en cualquier campo confirma
+  ['mi-name', 'mi-price', 'mi-qty'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addManualItem(document.getElementById('mi-add-btn')); }
+    });
+  });
+}
+
+function addManualItem(btn) {
+  const bg = btn.closest('.modal-bg');
+  const name = (bg.querySelector('#mi-name').value || '').trim();
+  const price = getCopValue('mi-price');
+  const qty = Math.max(1, parseInt(bg.querySelector('#mi-qty').value, 10) || 1);
+  if (!name) { Toast.error('El nombre del producto es obligatorio'); return; }
+  if (!price || price <= 0) { Toast.error('Ingresa un precio válido'); return; }
+  State.cart.push({
+    product_id:   'manual-' + Date.now(),
+    product_name: name,
+    category:     'Manual',
+    unit_price:   price,
+    quantity:     qty,
+    discount_pct: 0,
+    manual:       true,
+  });
+  bg.remove();
+  renderCart();
+  Toast.success(`"${name}" agregado al carrito`);
+}
+
 function cartTotals() {
   const subtotal = State.cart.reduce((acc, i) => {
     const linePre = i.unit_price * i.quantity;
@@ -439,14 +513,16 @@ function renderCart() {
     el.innerHTML = `<div class="cart-empty"><i class="fa-solid fa-cart-shopping"></i><span>Carrito vacío</span><span style="font-size:.78rem;color:var(--text3)">Haz clic en un producto para agregar</span></div>`;
   } else {
     el.innerHTML = State.cart.map((item, idx) => `
-      <div class="cart-item">
-        <span class="ci-name">${item.product_name}</span>
+      <div class="cart-item${item.manual ? ' cart-item--manual' : ''}${(item.unit_price||0) <= 0 ? ' cart-item--noprice' : ''}">
+        <span class="ci-name">${item.product_name}${item.manual ? ' <span class="chip chip-blue" style="font-size:.6rem;padding:1px 5px">Manual</span>' : ''}</span>
         <span class="ci-price">${fmt(item.unit_price * item.quantity * (1 - (item.discount_pct||0)/100))}</span>
         <div class="ci-controls">
           <button class="ci-qty-btn" onclick="updateQty(${idx}, -1)"><i class="fa-solid fa-minus"></i></button>
           <span class="ci-qty">${item.quantity}</span>
           <button class="ci-qty-btn" onclick="updateQty(${idx}, 1)"><i class="fa-solid fa-plus"></i></button>
-          <span style="font-size:.75rem;color:var(--text3)">${fmt(item.unit_price)} c/u</span>
+          <span class="ci-unit">Precio:</span>
+          <input type="number" min="0" step="any" value="${item.unit_price||0}" class="ci-price-input${(item.unit_price||0) <= 0 ? ' ci-price-input--alert' : ''}" onchange="setCartPrice(${idx}, this.value)" title="Precio unitario — edítalo si es necesario" aria-label="Precio unitario">
+          <span class="ci-unit">c/u</span>
           <button class="ci-remove" onclick="removeFromCart(${idx})"><i class="fa-solid fa-trash"></i></button>
         </div>
         <div class="ci-line-disc">
@@ -547,6 +623,13 @@ function renderQuickCashButtons(total) {
 
 function openPaymentModal() {
   if (!State.cart.length) { Toast.error('El carrito está vacío'); return; }
+  // Validar que todos los ítems tengan precio (venta con precio manual)
+  const noPrice = State.cart.filter(i => (i.unit_price || 0) <= 0);
+  if (noPrice.length) {
+    const names = noPrice.map(i => i.product_name).join(', ');
+    Toast.error(`Falta el precio en: ${names}`);
+    return;
+  }
   const { total } = cartTotals();
   document.getElementById('pay-total-display').textContent = fmt(total);
 
@@ -686,7 +769,7 @@ async function completeSale() {
     cashier: 'Admin',
   };
   const itemsPayload = State.cart.map(i => ({
-    product_id: i.product_id, product_name: i.product_name, category: i.category,
+    product_id: i.manual ? null : i.product_id, product_name: i.product_name, category: i.category,
     unit_price: i.unit_price, quantity: i.quantity, discount_pct: i.discount_pct || 0,
     line_total: i.unit_price * i.quantity * (1 - (i.discount_pct||0)/100),
   }));
@@ -694,6 +777,7 @@ async function completeSale() {
   try {
     const sale = await PosDB.Sales.create(salePayload, itemsPayload);
     for (const item of State.cart) {
+      if (item.manual) continue; // los ítems manuales no manejan stock
       await PosDB.Stock.adjust(item.product_id, -item.quantity, 'out', 'Venta', sale.id);
       if (State.stock[item.product_id] !== undefined)
         State.stock[item.product_id] = Math.max(0, (State.stock[item.product_id]||0) - item.quantity);
@@ -3608,6 +3692,13 @@ async function saveManualLayaway(btn) {
 /* ── Crear apartado desde el carrito ── */
 async function openLayawayFromCart() {
   if (!State.cart.length) { Toast.error('El carrito está vacío'); return; }
+  // Validar que todos los ítems tengan precio
+  const noPrice = State.cart.filter(i => (i.unit_price || 0) <= 0);
+  if (noPrice.length) {
+    const names = noPrice.map(i => i.product_name).join(', ');
+    Toast.error(`Falta el precio en: ${names}`);
+    return;
+  }
 
   const { subtotal, discAmt, total } = cartTotals();
   const itemsSummary = State.cart.map(i =>
@@ -3777,7 +3868,7 @@ async function saveLayaway(total, btn) {
     };
 
     const itemsPayload = State.cart.map(i => ({
-      product_id:   i.product_id,
+      product_id:   i.manual ? null : i.product_id,
       product_name: i.product_name,
       category:     i.category || '',
       unit_price:   i.unit_price,
@@ -3790,6 +3881,7 @@ async function saveLayaway(total, btn) {
 
     // Descontar stock (los productos quedan reservados)
     for (const item of State.cart) {
+      if (item.manual) continue; // los ítems manuales no manejan stock
       await PosDB.Stock.adjust(
         item.product_id, -item.quantity, 'out',
         `Apartado ${_layawayNum(layaway.layaway_num)}`, layaway.id
