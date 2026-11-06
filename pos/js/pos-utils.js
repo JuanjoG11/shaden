@@ -251,23 +251,24 @@ function printInvoice(saleId) {
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Factura ${invoiceNum}</title>
+  <title>${invoiceNum}</title>
   <style>
-    @page { size: 80mm auto; margin: 2mm 3mm; }
+    @page { size: 80mm auto; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 11px;
-      line-height: 1.25;
+      font-size: 9.5px;
+      line-height: 1.2;
       color: #000;
       background: #fff;
-      width: 72mm;
+      width: 76mm;
+      padding: 2mm 2mm 0 2mm;
     }
     pre { font-family: inherit; font-size: inherit; white-space: pre; word-break: break-all; }
-    .big { font-size: 14px; font-weight: bold; }
-    .med { font-size: 12px; font-weight: bold; }
+    .big { font-size: 12px; font-weight: bold; }
+    .med { font-size: 10px; font-weight: bold; }
     .no-print {
-      display: block; margin-top: 12px; padding: 8px; width: 100%;
+      display: block; margin-top: 10px; padding: 7px; width: 100%;
       font-size: 13px; font-weight: bold; background: #111; color: #fff;
       border: none; border-radius: 4px; cursor: pointer; font-family: Arial, sans-serif;
     }
@@ -278,35 +279,28 @@ function printInvoice(saleId) {
 <pre>
 <span class="big">${center(storeName)}</span>
 ${storeAddr  ? center(storeAddr)  + '\n' : ''
-}${storePhone ? center('Tel: ' + storePhone) + '\n' : ''
+}${storePhone ? center('Tel:' + storePhone) + '\n' : ''
 }${SEP}
-${center(invoiceNum + '  ' + fmtDateTime(sale.created_at))}
-${SEP}
-${cols('Cliente:', sale.customer_name || 'Cliente general')}
-${cols('Cajero:',  sale.cashier || 'Admin')}
-${cols('Pago:',    payMethodLabel(sale.payment_method))}${
+${center(invoiceNum + ' ' + fmtDateTime(sale.created_at))}
+${cols('Cliente:', sale.customer_name || 'General')}
+${cols('Pago:', payMethodLabel(sale.payment_method))}${
   sale.sale_notes ? '\n' + cols('Nota:', sale.sale_notes) : ''
 }
 ${SEP}
-${'PRODUCTO'.padEnd(W - 22)}${'CANT x P.U.'.padStart(12)} ${'TOTAL'.padStart(9)}
+${'PRODUCTO'.padEnd(W - 22)}${'QTY x P.U.'.padStart(12)} ${'TOTAL'.padStart(9)}
 ${SEP}
 ${itemsText}
 ${SEP2}
 ${cols('SUBTOTAL', fmt(sale.subtotal))}${
-  sale.discount_amt > 0 ? '\n' + cols(`Desc. (${sale.discount_pct}%)`, '-' + fmt(sale.discount_amt)) : ''
-}${sale.tax_amt > 0 ? '\n' + cols(`IVA (${sale.tax_pct}%)`, fmt(sale.tax_amt)) : ''}
+  sale.discount_amt > 0 ? '\n' + cols(`Desc.(${sale.discount_pct}%)`, '-' + fmt(sale.discount_amt)) : ''
+}${sale.tax_amt > 0 ? '\n' + cols(`IVA(${sale.tax_pct}%)`, fmt(sale.tax_amt)) : ''}
 <span class="med">${cols('TOTAL', fmt(sale.total))}</span>
-${SEP2}
-${cols('Pagado (' + payMethodLabel(sale.payment_method) + ')', fmt(sale.amount_paid))}${
+${cols('Pagado', fmt(sale.amount_paid))}${
   sale.change_given > 0 ? '\n' + cols('Cambio:', fmt(sale.change_given)) : ''
 }
 ${SEP}
 ${center(footer)}
 ${SEP}
-
-
-
-
 </pre>
 <button class="no-print" onclick="window.print()">🖨  Imprimir</button>
 </body>
