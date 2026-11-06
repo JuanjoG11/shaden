@@ -253,45 +253,25 @@ function printInvoice(saleId) {
   <meta charset="UTF-8">
   <title>Factura ${invoiceNum}</title>
   <style>
-    @page {
-      size: 80mm auto;
-      margin: 3mm 4mm;
-    }
+    @page { size: 80mm auto; margin: 2mm 3mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 12px;
-      line-height: 1.35;
+      font-size: 11px;
+      line-height: 1.25;
       color: #000;
       background: #fff;
       width: 72mm;
     }
-    pre {
-      font-family: inherit;
-      font-size: inherit;
-      white-space: pre;
-      word-break: break-all;
-    }
-    .big   { font-size: 15px; font-weight: bold; }
-    .med   { font-size: 13px; font-weight: bold; }
-    /* Botón solo en pantalla */
+    pre { font-family: inherit; font-size: inherit; white-space: pre; word-break: break-all; }
+    .big { font-size: 14px; font-weight: bold; }
+    .med { font-size: 12px; font-weight: bold; }
     .no-print {
-      display: block;
-      margin-top: 14px;
-      padding: 9px;
-      width: 100%;
-      font-size: 14px;
-      font-weight: bold;
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: Arial, sans-serif;
+      display: block; margin-top: 12px; padding: 8px; width: 100%;
+      font-size: 13px; font-weight: bold; background: #111; color: #fff;
+      border: none; border-radius: 4px; cursor: pointer; font-family: Arial, sans-serif;
     }
-    @media print {
-      .no-print { display: none; }
-    }
+    @media print { .no-print { display: none; } }
   </style>
 </head>
 <body>
@@ -300,20 +280,20 @@ function printInvoice(saleId) {
 ${storeAddr  ? center(storeAddr)  + '\n' : ''
 }${storePhone ? center('Tel: ' + storePhone) + '\n' : ''
 }${SEP}
-<span class="med">${center('FACTURA ' + invoiceNum)}</span>
-${center(fmtDateTime(sale.created_at))}
+${center(invoiceNum + '  ' + fmtDateTime(sale.created_at))}
 ${SEP}
 ${cols('Cliente:', sale.customer_name || 'Cliente general')}
 ${cols('Cajero:',  sale.cashier || 'Admin')}
-${cols('Pago:',    payMethodLabel(sale.payment_method))}
-${sale.sale_notes ? cols('Nota:', sale.sale_notes) + '\n' : ''
-}${SEP}
+${cols('Pago:',    payMethodLabel(sale.payment_method))}${
+  sale.sale_notes ? '\n' + cols('Nota:', sale.sale_notes) : ''
+}
+${SEP}
 ${'PRODUCTO'.padEnd(W - 22)}${'CANT x P.U.'.padStart(12)} ${'TOTAL'.padStart(9)}
 ${SEP}
 ${itemsText}
 ${SEP2}
 ${cols('SUBTOTAL', fmt(sale.subtotal))}${
-  sale.discount_amt > 0 ? '\n' + cols(`Descuento (${sale.discount_pct}%)`, '-' + fmt(sale.discount_amt)) : ''
+  sale.discount_amt > 0 ? '\n' + cols(`Desc. (${sale.discount_pct}%)`, '-' + fmt(sale.discount_amt)) : ''
 }${sale.tax_amt > 0 ? '\n' + cols(`IVA (${sale.tax_pct}%)`, fmt(sale.tax_amt)) : ''}
 <span class="med">${cols('TOTAL', fmt(sale.total))}</span>
 ${SEP2}
@@ -322,7 +302,6 @@ ${cols('Pagado (' + payMethodLabel(sale.payment_method) + ')', fmt(sale.amount_p
 }
 ${SEP}
 ${center(footer)}
-${center(invoiceNum + ' - ' + fmtDateTime(sale.created_at))}
 ${SEP}
 </pre>
 <button class="no-print" onclick="window.print()">🖨  Imprimir</button>
