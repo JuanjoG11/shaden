@@ -1152,6 +1152,7 @@ async function renderSales(filter = 'today') {
       <td>${statusChip(s.status)}</td>
       <td>
         <div class="td-actions">
+          <button class="btn btn-sm btn-outline" onclick="openSaleDetail('${s.id}')" title="Ver detalle"><i class="fa-solid fa-eye"></i></button>
           <button class="btn btn-sm btn-outline" style="color:var(--green);border-color:rgba(39,160,106,.3)" onclick="openWhatsAppReceipt('${s.id}')" title="Enviar recibo por WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
           <button class="btn btn-sm btn-outline" onclick="printInvoice('${s.id}')" title="Imprimir factura"><i class="fa-solid fa-print"></i></button>
           ${s.status === 'completed' ? `<button class="btn btn-sm btn-outline" onclick="openRefundModal('${s.id}')" title="Devolución"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
@@ -1184,6 +1185,124 @@ async function cancelSale(id) {
     Toast.success('Venta anulada');
     renderSales();
   } catch(e) { Toast.error('Error al anular'); }
+}
+
+/* ── Filtrar ventas por rango de fechas personalizado ── */
+async function renderSalesByDate() {
+  const fromEl = document.getElementById('sales-date-from');
+  const toEl   = document.getElementById('sales-date-to');
+  if (!fromEl?.value && !toEl?.value) { Toast.info('Elige al menos una fecha'); return; }
+
+  // Quitar active de los botones de filtro rápido
+  document.querySelectorAll('[data-sales-filter]').forEach(b => b.classList.remove('active'));
+
+  const from = fromEl?.value ? new Date(fromEl.value + 'T00:00:00-05:00').toISOString() : new Date('2020-01-01').toISOString();
+  const to   = toEl?.value   ? new Date(toEl.value   + 'T23:59:59-05:00').toISOString() : new Date().toISOString();
+
+  const el = document.getElementById('sales-tbody');
+  if (el) el.innerHTML = '<tr><td colspan="7" class="empty-msg">Cargando…</td></tr>';
+
+  const sales = await PosDB.Sales.getByRange(from, to);
+  const q = document.getElementById('sales-search')?.value?.toLowerCase() || '';
+  const filtered = q ? sales.filter(s => s.customer_name.toLowerCase().includes(q) || invoiceNum(s.invoice_num).includes(q)) : sales;
+
+  const total = filtered.filter(s => s.status === 'completed').reduce((a, b) => a + b.total, 0);
+  document.getElementById('sales-total-display').textContent = fmt(total);
+  document.getElementById('sales-count-display').textContent = filtered.filter(s => s.status === 'completed').length;
+
+  if (!filtered.length) { el.innerHTML = '<tr><td colspan="7" class="empty-msg">Sin ventas en este período</td></tr>'; return; }
+
+  el.innerHTML = filtered.map(s => `
+    <tr>
+      <td><span class="text-gold fw-bold">${invoiceNum(s.invoice_num)}</span></td>
+      <td>${fmtDateTime(s.created_at)}</td>
+      <td>${s.customer_name || 'General'}</td>
+      <td>${payMethodLabel(s.payment_method)}</td>
+      <td class="fw-bold text-gold">${fmt(s.total)}</td>
+      <td>${statusChip(s.status)}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-sm btn-outline" onclick="openSaleDetail('${s.id}')" title="Ver detalle"><i class="fa-solid fa-eye"></i></button>
+          <button class="btn btn-sm btn-outline" style="color:var(--green);border-color:rgba(39,160,106,.3)" onclick="openWhatsAppReceipt('${s.id}')" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+          <button class="btn btn-sm btn-outline" onclick="printInvoice('${s.id}')" title="Imprimir"><i class="fa-solid fa-print"></i></button>
+          ${s.status === 'completed' ? `<button class="btn btn-sm btn-outline" onclick="openRefundModal('${s.id}')" title="Devolución"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+          ${s.status === 'completed' ? `<button class="btn btn-sm btn-danger" onclick="cancelSale('${s.id}')" title="Anular"><i class="fa-solid fa-ban"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+/* ── Modal de detalle de venta ── */
+async function openSaleDetail(saleId) {
+  const sale = await PosDB.Sales.getById(saleId);
+  if (!sale) { Toast.error('No se encontró la venta'); return; }
+  const inv = invoiceNum(sale.invoice_num);
+  const items = sale.sale_items || [];
+
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg open';
+  bg.innerHTML = `
+    <div class="modal-box modal-lg">
+      <div class="modal-hdr">
+        <h3><i class="fa-solid fa-receipt" style="color:var(--gold);margin-right:8px"></i>${inv}</h3>
+        <button class="icon-btn" onclick="this.closest('.modal-bg').remove()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Info general -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px">
+          <div class="stat-card" style="padding:10px 14px">
+            <div class="stat-card__label">Fecha</div>
+            <div style="font-size:.88rem;font-weight:600;margin-top:2px">${fmtDateTime(sale.created_at)}</div>
+          </div>
+          <div class="stat-card" style="padding:10px 14px">
+            <div class="stat-card__label">Cliente</div>
+            <div style="font-size:.88rem;font-weight:600;margin-top:2px">${sale.customer_name || 'General'}</div>
+          </div>
+          <div class="stat-card" style="padding:10px 14px">
+            <div class="stat-card__label">Método de pago</div>
+            <div style="font-size:.88rem;font-weight:600;margin-top:2px">${payMethodLabel(sale.payment_method)}</div>
+          </div>
+          <div class="stat-card" style="padding:10px 14px">
+            <div class="stat-card__label">Estado</div>
+            <div style="margin-top:4px">${statusChip(sale.status)}</div>
+          </div>
+        </div>
+        <!-- Productos -->
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Desc.</th><th style="text-align:right">Total línea</th></tr>
+            </thead>
+            <tbody>
+              ${items.map(it => `
+              <tr>
+                <td>${it.product_name}</td>
+                <td style="text-align:center">${it.quantity}</td>
+                <td style="text-align:right">${fmt(it.unit_price)}</td>
+                <td style="text-align:right">${it.discount_pct > 0 ? it.discount_pct + '%' : '—'}</td>
+                <td style="text-align:right;font-weight:700;color:var(--gold-dark)">${fmt(it.line_total)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <!-- Totales -->
+        <div style="margin-top:14px;border-top:1px solid var(--cream-mid);padding-top:12px;display:flex;flex-direction:column;gap:4px;max-width:300px;margin-left:auto">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem"><span>Subtotal</span><span>${fmt(sale.subtotal)}</span></div>
+          ${sale.discount_amt > 0 ? `<div style="display:flex;justify-content:space-between;font-size:.85rem;color:var(--red)"><span>Descuento (${sale.discount_pct}%)</span><span>-${fmt(sale.discount_amt)}</span></div>` : ''}
+          ${sale.tax_amt > 0 ? `<div style="display:flex;justify-content:space-between;font-size:.85rem"><span>IVA (${sale.tax_pct}%)</span><span>${fmt(sale.tax_amt)}</span></div>` : ''}
+          <div style="display:flex;justify-content:space-between;font-size:1.05rem;font-weight:700;color:var(--gold-dark);border-top:1px solid var(--cream-mid);padding-top:6px;margin-top:4px"><span>TOTAL</span><span>${fmt(sale.total)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text2)"><span>Pagado</span><span>${fmt(sale.amount_paid)}</span></div>
+          ${sale.change_given > 0 ? `<div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text2)"><span>Cambio</span><span>${fmt(sale.change_given)}</span></div>` : ''}
+        </div>
+        ${sale.sale_notes ? `<div style="margin-top:10px;font-size:.8rem;color:var(--text2)"><i class="fa-solid fa-note-sticky"></i> ${sale.sale_notes}</div>` : ''}
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-outline" onclick="this.closest('.modal-bg').remove()">Cerrar</button>
+        <button class="btn btn-outline" style="color:var(--green);border-color:rgba(39,160,106,.3)" onclick="openWhatsAppReceipt('${sale.id}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+        <button class="btn btn-gold" onclick="printInvoice('${sale.id}')"><i class="fa-solid fa-print"></i> Imprimir factura</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
 }
 
 /* ═══════════════════════════════════════════════

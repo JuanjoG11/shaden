@@ -386,11 +386,16 @@
 
           <div class="table-wrap">
             <div class="table-toolbar" style="flex-wrap:wrap;gap:10px">
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <button class="btn btn-outline btn-sm active" data-sales-filter="today">Hoy</button>
                 <button class="btn btn-outline btn-sm" data-sales-filter="week">7 días</button>
                 <button class="btn btn-outline btn-sm" data-sales-filter="month">30 días</button>
                 <button class="btn btn-outline btn-sm" data-sales-filter="all">Todas</button>
+                <span style="font-size:.78rem;color:var(--text3);margin-left:4px">o por fecha:</span>
+                <input type="date" class="form-ctrl" id="sales-date-from" style="width:140px;font-size:.8rem" title="Desde" />
+                <span style="font-size:.78rem;color:var(--text3)">—</span>
+                <input type="date" class="form-ctrl" id="sales-date-to" style="width:140px;font-size:.8rem" title="Hasta" />
+                <button class="btn btn-gold btn-sm" onclick="renderSalesByDate()"><i class="fa-solid fa-magnifying-glass"></i></button>
               </div>
               <div style="display:flex;gap:8px;align-items:center">
                 <div class="search-wrap">

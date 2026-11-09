@@ -157,7 +157,6 @@ VALUES
 ('lov_VIE0001',    'VIEJITOS UPS 20CM',                  'regalos', 'VIE0001LOV',    'active', NULL, '', '', ''),
 ('lov_VIEDUV',     'VIEJITOS 25CM',                      'regalos', 'VIEDUV-LOVLOV', 'active', NULL, '', '', ''),
 ('lov_YOD0001',    'BABY YODA 25CM',                     'regalos', 'YOD0001LOV',    'active', NULL, '', '', ''),
-('lov_YOS0001',    'YOSHI DRAGON 20CM',                  'regalos', 'YOS0001LOV',    'active', NULL, '', '', '')
 
 ON CONFLICT (id) DO NOTHING;
 
